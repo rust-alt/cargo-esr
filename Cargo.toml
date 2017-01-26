@@ -1,0 +1,19 @@
+[package]
+name = "cargo-esr"
+version = "0.1.0"
+license = "MPL 2.0"
+authors = ["Mohammad AlSaleh <CE.Mohammad.AlSaleh@gmail.com>"]
+
+[dependencies]
+clap = {version = "2" , features = ["yaml"]}
+isatty = "0.1"
+ansi_term = "0.9"
+time = "0.1"
+error-chain = "0.7"
+pipeliner = "0.1"
+serde = "0.9"
+serde_derive = "0.9"
+serde_json = "0.9"
+hyper = "0.10"
+native-tls = "0.1"
+hyper-native-tls = "0.2"

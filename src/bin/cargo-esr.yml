@@ -1,0 +1,39 @@
+name: "cargo-esr"
+version: "0.1"
+author: "Mohammad AlSaleh <CE.Mohammad.AlSaleh at gmail.com>"
+about: "cargo's Extended Search & Ranking tool"
+args:
+  - search:
+      short: s
+      long: search
+      takes_value: true
+      empty_values: false
+      multiple: true
+      help: "Search crates.io and return results sorted by score"
+  - score:
+      short: c
+      long: score
+      takes_value: true
+      empty_values: false
+      help: "Get detailed score of a crate"
+  - limit:
+      short: l
+      long: limit
+      takes_value: true
+      empty_values: false
+      help: "Limit the number of search results (default: 10, valid: 3-30)"
+  - crate-only:
+      short: o
+      long: crate-only
+      help: "Get crate info only, without repository scores"
+  - gh-token:
+      short: g
+      long: gh-token
+      takes_value: true
+      empty_values: false
+      value_name: CARGO_ESR_GH_TOKEN
+      help: "Set GitHub Access Token (https://github.com/settings/tokens/new)"
+  - no-color:
+      short: n
+      long: no-color
+      help: "Force disable colors and all formattings"
