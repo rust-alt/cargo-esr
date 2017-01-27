@@ -590,7 +590,7 @@
  is a hard dependency of 750 crates. And rustaceans are hardly known for their
  conservative development tendencies.
 
- What that tells us is that the majority of rustaceans are contempt with
+ What that tells us is that the majority of rustaceans are content with
  `rustc_serialize`. And have no reason, or feel no urgency, to move
  to `serde`.
 
