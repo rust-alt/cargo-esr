@@ -33,6 +33,10 @@
  the *official community*. And providing a more objective view into
  the swarm, and its current state of affairs.
 
+## Contact
+
+ Feel free to ask or propose anything in the meta [Questions & Chat](https://github.com/rust-alt/cargo-esr/issues/1) issue.
+
 ## Install & Usage
 
 ### Install
