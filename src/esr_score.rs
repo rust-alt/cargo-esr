@@ -118,9 +118,13 @@ impl CrateScores {
         }
     }
 
-    fn info_pair(&self, id: &str) -> (f64, String) {
+    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, String) {
         let (pos, neg) = self.crate_full.get_score_tuple();
-        let score = pos + neg;
+
+        let sort_score = match sort_positive {
+            true => pos,
+            false => pos + neg,
+        };
 
         let releases = self.crate_full.get_score_info().get_releases();
         let m_s_l_r = self.crate_full.get_score_info().get_months_since_last_release();
@@ -147,15 +151,15 @@ impl CrateScores {
                                               .trim()),
                                );
 
-        (score, info_str)
+        (sort_score, info_str)
     }
 
-    pub fn print_search_results(results: &[(String, Result<Self>)], printer: EsrPrinter) {
+    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, printer: EsrPrinter) {
         let mut results_vec = Vec::with_capacity(16);
         for res in results {
             match *res {
                 (ref id, Ok(ref score_info)) => {
-                    results_vec.push(score_info.info_pair(id));
+                    results_vec.push(score_info.info_pair(id, sort_positive));
                 },
                 (ref id, Err(_)) => {
                     results_vec.push((f64::MIN, format!("{}: Failed to get score info.", id)));
@@ -163,8 +167,8 @@ impl CrateScores {
             }
         }
 
-        // -score to get scores in reverse
-        results_vec.sort_by_key(|&(score, _)| -score as i64);
+        // -sort_score to get scores in reverse
+        results_vec.sort_by_key(|&(sort_score, _)| -sort_score as i64);
         for (num, result) in results_vec.iter().enumerate() {
             println!("{} {}",
                      printer.blue_bold(&format!("({})", num + 1)),

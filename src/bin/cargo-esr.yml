@@ -26,6 +26,10 @@ args:
       short: o
       long: crate-only
       help: "Get crate info only, without repository scores"
+  - sort-positive:
+      short: p
+      long: sort-positive
+      help: "Sort by positive scores only. Without taking inactivity into account"
   - gh-token:
       short: g
       long: gh-token

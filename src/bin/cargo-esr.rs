@@ -42,6 +42,7 @@ fn main() {
     let m = clap_app.get_matches_from(args);
 
     let crate_only = m.is_present("crate-only");
+    let sort_positive = m.is_present("sort-positive");
     let limit = m.value_of("limit").unwrap_or("10");
     let is_tty = isatty::stdout_isatty() && !m.is_present("no-color");
     let printer = EsrPrinter::new_with_term(is_tty);
@@ -106,7 +107,7 @@ fn main() {
                 }
 
                 let crates_scores_res = CrateScores::collect_scores(crates, &gh_token, crate_only, printer);
-                CrateScores::print_search_results(&*crates_scores_res, printer);
+                CrateScores::print_search_results(&*crates_scores_res, sort_positive, printer);
             } else {
                 printer.search_failed(&search_str);
                 std::process::exit(1);

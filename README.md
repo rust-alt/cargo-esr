@@ -62,10 +62,11 @@
      cargo-esr [FLAGS] [OPTIONS] <--search <search>...|--score <score>>
  
  FLAGS:
-     -o, --crate-only    Get crate info only, without repository scores
-     -h, --help          Prints help information
-     -n, --no-color      Force disable colors and all formattings
-     -V, --version       Prints version information
+     -o, --crate-only       Get crate info only, without repository scores
+     -h, --help             Prints help information
+     -n, --no-color         Force disable colors and all formattings
+     -p, --sort-positive    Sort by positive scores only. Without taking inactivity into account
+     -V, --version          Prints version information
  
  OPTIONS:
      -g, --gh-token <CARGO_ESR_GH_TOKEN>    Set GitHub Access Token (https://github.com/settings/tokens/new)
