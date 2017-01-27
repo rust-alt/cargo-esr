@@ -9,7 +9,7 @@ clap = {version = "2" , features = ["yaml"]}
 isatty = "0.1"
 ansi_term = "0.9"
 time = "0.1"
-error-chain = "0.7"
+error-chain = "0.8"
 pipeliner = "0.1"
 serde = "0.9"
 serde_derive = "0.9"
