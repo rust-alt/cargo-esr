@@ -27,6 +27,7 @@ extern crate native_tls;
 extern crate hyper_native_tls;
 
 extern crate time;
+extern crate semver;
 extern crate pipeliner;
 
 #[macro_use]

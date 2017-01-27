@@ -12,6 +12,7 @@
 use time;
 use hyper::client::Client;
 use pipeliner::Pipeline;
+use semver::{Version, VersionReq};
 
 use std::collections::HashMap;
 
@@ -41,6 +42,7 @@ impl CrateGeneralInfo {
 struct CrateReleaseInfo {
     created_at: String,
     downloads: usize,
+    num: String, // version
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -48,6 +50,7 @@ struct DependantInfo {
     crate_id: String, // crate name
     default_features: bool,
     optional: bool,
+    req: String, // version required
 }
 
 #[derive(Deserialize, Debug)]
@@ -136,6 +139,40 @@ impl CrateInfo {
 
     pub fn get_max_version(&self) -> &str {
         &self.self_info.general_info.max_version
+    }
+
+    // Current versions include max_ver, the last release,
+    // and all releases in the last 30.5 days
+    pub fn get_current_versions(&self) -> Result<Vec<&str>> {
+        let self_info = &self.self_info;
+        let mut current_versions = Vec::with_capacity(8);
+
+        // max_ver
+        current_versions.push(&*self_info.general_info.max_version);
+
+        // Last release
+        if let Some(release) = self_info.releases.get(0) {
+            current_versions.push(&*release.num);
+        }
+
+        // All releases in the last 30.5 days
+        let curr_time = time::get_time().sec;
+
+        for release in &self_info.releases {
+            let created_at_str = &release.created_at;
+            let created_at_tm = time::strptime(created_at_str, "%FT%TZ")?.to_timespec();
+            let created_at = created_at_tm.sec;
+
+            if (curr_time - created_at) as f64 / (3600.0 * 24.0 *30.5) <= 1.0 {
+                current_versions.push(&*release.num);
+            } else {
+                break;
+            }
+        }
+
+        current_versions.sort();
+        current_versions.dedup();
+        Ok(current_versions)
     }
 
     pub fn get_description(&self) -> Option<&str> {
@@ -245,7 +282,7 @@ pub struct CrateScoreInfo {
     releases: usize,
     last_2_releases_downloads: usize,
     dependants: usize,
-    hard_dependants: usize,
+    hard_dependants_on_current_versions: usize,
     dependants_from_non_owners: usize,
     // -ve
     months_since_last_release: f64,
@@ -286,10 +323,20 @@ impl CrateScoreInfo {
 
         // Reverse dependencies
         let dependants = crate_info.dependants.dependants.len();
-        let hard_dependants = crate_info.dependants
+
+        let current_versions = crate_info.get_current_versions()?;
+        let hard_dependants_on_current_versions = crate_info.dependants
             .dependants
             .iter()
             .filter(|dependant| dependant.default_features && !dependant.optional)
+            .filter_map(|dependant| {
+                current_versions.iter().find(|&ver| {
+                    match (Version::parse(ver), VersionReq::parse(&*dependant.req)) {
+                        (Ok(ver), Ok(req)) => req.matches(&ver),
+                        _ => false,
+                    }
+                })
+            })
             .count();
 
         // We do this in a separate step to make `with_threads()` work
@@ -334,7 +381,7 @@ impl CrateScoreInfo {
             releases,
             last_2_releases_downloads,
             dependants,
-            hard_dependants,
+            hard_dependants_on_current_versions,
             dependants_from_non_owners,
             // -ve
             months_since_last_release,
@@ -362,8 +409,8 @@ impl CrateScoreInfo {
                    0.001);
 
         score_add!(table, positive_score, self.dependants, 0.5);
-        score_add!(table, positive_score, self.hard_dependants, 0.5);
-        score_add!(table, positive_score, self.dependants_from_non_owners, 3.0);
+        score_add!(table, positive_score, self.hard_dependants_on_current_versions, 1.0);
+        score_add!(table, positive_score, self.dependants_from_non_owners, 2.5);
 
         // -ve
         score_add!(table,

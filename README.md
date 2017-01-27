@@ -233,7 +233,7 @@
  Let's take `mio`'s score as an example:
  ```
  $ cargo esr -c mio
-  -------------------------------------------------
+ -------------------------------------------------
                 Crate Score Details
  -------------------------------------------------
                    self.has_desc                   |     1 * 5.000      | +5.000
@@ -241,13 +241,13 @@
                    self.has_docs                   |     1 * 15.000     | +15.000
       self.activity_span_in_months.powf(0.5)       |   5.137 * 10.000   | +51.373
                    self.releases                   |     22 * 3.000     | +66.000
-        self.last_2_releases_downloads / 2         |    1206 * 0.001    | +1.206
+        self.last_2_releases_downloads / 2         |    1336 * 0.001    | +1.336
                   self.dependants                  |     81 * 0.500     | +40.500
-               self.hard_dependants                |     78 * 0.500     | +39.000
-          self.dependants_from_non_owners          |     71 * 3.000     | +213.000
-     self.months_since_last_release.powf(1.5)      |   0.017 * -2.000   | -0.034
+     self.hard_dependants_on_current_versions      |     43 * 1.000     | +43.000
+          self.dependants_from_non_owners          |     71 * 2.500     | +177.500
+     self.months_since_last_release.powf(1.5)      |   0.027 * -2.000   | -0.054
  
- Crate Score: 436.044 (+436.079 / -0.034)
+ Crate Score: 404.655 (+404.709 / -0.054)
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
@@ -255,13 +255,13 @@
             self.contributors_up_to_100            |     76 * 3.000     | +228.000
       self.commits_from_upto_100_contributors      |    472 * 0.100     | +47.200
           self.secondary_contribution_pct          |     46 * 5.000     | +230.000
-        self.push_span_in_months.powf(0.5)         |   5.404 * 5.000    | +27.020
+        self.push_span_in_months.powf(0.5)         |   5.405 * 5.000    | +27.024
        self.merged_pull_requests_in_last_100       |     32 * 2.000     | +64.000
-    self.months_since_last_pr_merged.powf(1.5)     |   0.017 * -1.000   | -0.017
-   self.months_since_last_issue_closed.powf(1.5)   |   0.017 * -1.000   | -0.017
-       self.months_since_last_push.powf(1.5)       |   0.000 * -4.000   | -0.000
+    self.months_since_last_pr_merged.powf(1.5)     |   0.027 * -1.000   | -0.027
+   self.months_since_last_issue_closed.powf(1.5)   |   0.027 * -1.000   | -0.027
+       self.months_since_last_push.powf(1.5)       |   0.002 * -4.000   | -0.006
  
- Repo Score : 653.685 (+653.720 / -0.034)
+ Repo Score : 653.664 (+653.724 / -0.060)
  ```
 
  The first column shows the score contributor factors. The 2nd column shows
@@ -302,9 +302,13 @@
 #### self.dependants
    The number of dependants (a.k.a. reverse dependencies).
 
-#### self.hard_dependants
-   The number of hard dependants. That is, the number of crates
-   that non-optionally depend on this crate in their default feature.
+#### self.hard_dependants_on_current_versions
+   The number of hard dependants on current versions of this crate.
+
+   `hard` means the dependant non-optionally depends on this crate in their default feature.
+
+   `on_current_versions` mean the dependant depends on a version that is either `max_ver`, or
+   the last one released, or a version that has been released in the last 30.5 days.
 
 #### self.dependants_from_non_owners
    The number of dependants from other authors than the authors of this
