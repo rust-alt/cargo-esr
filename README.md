@@ -240,14 +240,16 @@
                  self.has_license                  |     1 * 5.000      | +5.000
                    self.has_docs                   |     1 * 15.000     | +15.000
       self.activity_span_in_months.powf(0.5)       |   5.137 * 10.000   | +51.373
-                   self.releases                   |     22 * 3.000     | +66.000
-        self.last_2_releases_downloads / 2         |    1336 * 0.001    | +1.336
+                   self.releases                   |     22 * 1.500     | +33.000
+             self.non_yanked_releases              |     22 * 1.500     | +33.000
+   self.last_2_non_yanked_releases_downloads / 2   |    1693 * 0.001    | +1.693
                   self.dependants                  |     81 * 0.500     | +40.500
      self.hard_dependants_on_current_versions      |     43 * 1.000     | +43.000
           self.dependants_from_non_owners          |     71 * 2.500     | +177.500
-     self.months_since_last_release.powf(1.5)      |   0.027 * -2.000   | -0.054
+                  self.all_yanked                  |   0 * -5000.000    | 0.000
+     self.months_since_last_release.powf(1.5)      |   0.046 * -2.000   | -0.092
  
- Crate Score: 404.655 (+404.709 / -0.054)
+ Crate Score: 404.974 (+405.066 / -0.092)
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
@@ -255,13 +257,13 @@
             self.contributors_up_to_100            |     76 * 3.000     | +228.000
       self.commits_from_upto_100_contributors      |    472 * 0.100     | +47.200
           self.secondary_contribution_pct          |     46 * 5.000     | +230.000
-        self.push_span_in_months.powf(0.5)         |   5.405 * 5.000    | +27.024
-       self.merged_pull_requests_in_last_100       |     32 * 2.000     | +64.000
-    self.months_since_last_pr_merged.powf(1.5)     |   0.027 * -1.000   | -0.027
-   self.months_since_last_issue_closed.powf(1.5)   |   0.027 * -1.000   | -0.027
-       self.months_since_last_push.powf(1.5)       |   0.002 * -4.000   | -0.006
+        self.push_span_in_months.powf(0.5)         |   5.408 * 5.000    | +27.038
+       self.merged_pull_requests_in_last_100       |     31 * 2.000     | +62.000
+    self.months_since_last_pr_merged.powf(1.5)     |   0.046 * -1.000   | -0.046
+   self.months_since_last_issue_closed.powf(1.5)   |   0.046 * -1.000   | -0.046
+       self.months_since_last_push.powf(1.5)       |   0.003 * -4.000   | -0.013
  
- Repo Score : 653.664 (+653.724 / -0.060)
+ Repo Score : 651.634 (+651.738 / -0.105)
  ```
 
  The first column shows the score contributor factors. The 2nd column shows
