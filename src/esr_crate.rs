@@ -29,7 +29,6 @@ pub struct CrateGeneralInfo {
     repository: Option<String>,
     documentation: Option<String>,
     license: Option<String>,
-    versions: Vec<usize>, // release IDs
 }
 
 impl CrateGeneralInfo {
@@ -39,7 +38,7 @@ impl CrateGeneralInfo {
 }
 
 #[derive(Deserialize, Debug)]
-struct CrateReleaseInfo {
+pub struct CrateReleaseInfo {
     created_at: String,
     downloads: usize,
     num: String, // version
@@ -142,6 +141,26 @@ impl CrateInfo {
         &self.self_info.general_info.max_version
     }
 
+    pub fn all_releases(&self) -> &[CrateReleaseInfo] {
+        &self.self_info.releases
+    }
+
+    pub fn non_yanked_releases(&self) -> Vec<&CrateReleaseInfo> {
+        self.self_info
+            .releases
+            .iter()
+            .filter(|release| !release.yanked)
+            .collect()
+    }
+
+    pub fn all_yanked(&self) -> bool {
+        self.self_info
+            .releases
+            .iter()
+            .find(|release| !release.yanked)
+            .is_none()
+    }
+
     // Current versions include max_ver, the last release,
     // and all releases in the last 30.5 days
     pub fn get_current_versions(&self) -> Result<Vec<&str>> {
@@ -154,11 +173,7 @@ impl CrateInfo {
         current_versions.push(&*self_info.general_info.max_version);
 
         // Only take non-yanked releases into account
-        let non_yanked_releases: Vec<_> = self_info
-            .releases
-            .iter()
-            .filter(|release| !release.yanked)
-            .collect();
+        let non_yanked_releases: Vec<_> = self.non_yanked_releases();
 
         // Last release
         if let Some(release) = non_yanked_releases.get(0) {
@@ -183,14 +198,6 @@ impl CrateInfo {
         current_versions.sort();
         current_versions.dedup();
         Ok(current_versions)
-    }
-
-    pub fn all_yanked(&self) -> bool {
-        self.self_info
-            .releases
-            .iter()
-            .find(|release| !release.yanked)
-            .is_none()
     }
 
     pub fn get_description(&self) -> Option<&str> {
@@ -298,6 +305,7 @@ pub struct CrateScoreInfo {
     has_license: usize,
     activity_span_in_months: f64,
     releases: usize,
+    non_yanked_releases: usize,
     last_2_releases_downloads: usize,
     dependants: usize,
     hard_dependants_on_current_versions: usize,
@@ -316,7 +324,8 @@ impl CrateScoreInfo {
         let has_license = general_info.license.is_some() as usize;
         let all_yanked = crate_info.all_yanked() as usize;
 
-        let releases = general_info.versions.len();
+        let releases = crate_info.all_releases().len();
+        let non_yanked_releases = crate_info.non_yanked_releases().len();
         let last_2_releases_downloads = crate_info.self_info
             .releases
             .iter()
@@ -399,6 +408,7 @@ impl CrateScoreInfo {
             has_license,
             activity_span_in_months,
             releases,
+            non_yanked_releases,
             last_2_releases_downloads,
             dependants,
             hard_dependants_on_current_versions,
@@ -424,7 +434,8 @@ impl CrateScoreInfo {
                    self.activity_span_in_months.powf(0.5),
                    10.0);
 
-        score_add!(table, positive_score, self.releases, 3.0);
+        score_add!(table, positive_score, self.releases, 1.5);
+        score_add!(table, positive_score, self.non_yanked_releases, 1.5);
         score_add!(table,
                    positive_score,
                    self.last_2_releases_downloads / 2,
