@@ -149,6 +149,8 @@ impl CrateInfo {
         let mut current_versions = Vec::with_capacity(8);
 
         // max_ver
+        // XXX: max_version can point to a yanked version ATM.
+        // this may change in the future as it's probably a bug.
         current_versions.push(&*self_info.general_info.max_version);
 
         // Only take non-yanked releases into account
