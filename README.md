@@ -307,8 +307,9 @@
 
    `hard` means the dependant non-optionally depends on this crate in their default feature.
 
-   `on_current_versions` mean the dependant depends on a version that is either `max_ver`, or
-   the last one released, or a version that has been released in the last 30.5 days.
+   `on_current_versions` mean the dependant depends on a version that is
+   either `max_ver`, or the last non-yanked one released, or a non-yanked
+   version that has been released in the last 30.5 days.
 
 #### self.dependants_from_non_owners
    The number of dependants from other authors than the authors of this

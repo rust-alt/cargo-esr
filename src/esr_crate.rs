@@ -43,6 +43,7 @@ struct CrateReleaseInfo {
     created_at: String,
     downloads: usize,
     num: String, // version
+    yanked: bool,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -150,15 +151,22 @@ impl CrateInfo {
         // max_ver
         current_versions.push(&*self_info.general_info.max_version);
 
+        // Only take non-yanked releases into account
+        let non_yanked_releases: Vec<_> = self_info
+            .releases
+            .iter()
+            .filter(|release| !release.yanked)
+            .collect();
+
         // Last release
-        if let Some(release) = self_info.releases.get(0) {
+        if let Some(release) = non_yanked_releases.get(0) {
             current_versions.push(&*release.num);
         }
 
         // All releases in the last 30.5 days
         let curr_time = time::get_time().sec;
 
-        for release in &self_info.releases {
+        for release in &non_yanked_releases {
             let created_at_str = &release.created_at;
             let created_at_tm = time::strptime(created_at_str, "%FT%TZ")?.to_timespec();
             let created_at = created_at_tm.sec;
