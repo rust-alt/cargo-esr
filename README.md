@@ -324,6 +324,11 @@
    one popular , but arguably deprecated, crate to another. It's
    the anti-anecdote factor, of sorts.
 
+#### self.all_yanked
+   Whether all releases of the crate have been yanked. This is a strong
+   negative factor (-5000.0), with an additional indicator in the search
+   results displayed.
+
 #### self.months_since_last_release.powf(1.5)
    The number of months (floating point) since the last version released. This is
    a negative factor.

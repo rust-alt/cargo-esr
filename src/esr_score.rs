@@ -121,6 +121,11 @@ impl CrateScores {
     fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, String) {
         let (pos, neg) = self.crate_full.get_score_tuple();
 
+        let all_yanked_str = match self.crate_full.get_info().all_yanked() {
+            true => self.printer.red_bold("(yanked)"),
+            false => String::new(),
+        };
+
         let sort_score = match sort_positive {
             true => pos,
             false => pos + neg,
@@ -134,8 +139,9 @@ impl CrateScores {
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
         let dependants_msg = format!("{} ({} from non owners)", dependants, d_b_n_o);
 
-        let info_str = format!("{}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n",
+        let info_str = format!("{} {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n",
                                self.printer.blue_bold(id),
+                               all_yanked_str,
                                self.score_crate(),
                                self.score_repo(),
                                self.printer.msg_pair("Dependants ", &dependants_msg),

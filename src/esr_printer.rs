@@ -47,7 +47,7 @@ impl EsrPrinter {
         }
     }
 
-    fn red_bold(&self, val: &str) -> String {
+    pub fn red_bold(&self, val: &str) -> String {
         if self.is_tty {
             format!("{}", Red.bold().paint(val))
         } else {
