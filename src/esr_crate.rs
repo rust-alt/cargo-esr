@@ -306,7 +306,7 @@ pub struct CrateScoreInfo {
     activity_span_in_months: f64,
     releases: usize,
     non_yanked_releases: usize,
-    last_2_releases_downloads: usize,
+    last_2_non_yanked_releases_downloads: usize,
     dependants: usize,
     hard_dependants_on_current_versions: usize,
     dependants_from_non_owners: usize,
@@ -326,8 +326,8 @@ impl CrateScoreInfo {
 
         let releases = crate_info.all_releases().len();
         let non_yanked_releases = crate_info.non_yanked_releases().len();
-        let last_2_releases_downloads = crate_info.self_info
-            .releases
+        let last_2_non_yanked_releases_downloads = crate_info
+            .non_yanked_releases()
             .iter()
             .take(2)
             .map(|release| release.downloads)
@@ -409,7 +409,7 @@ impl CrateScoreInfo {
             activity_span_in_months,
             releases,
             non_yanked_releases,
-            last_2_releases_downloads,
+            last_2_non_yanked_releases_downloads,
             dependants,
             hard_dependants_on_current_versions,
             dependants_from_non_owners,
@@ -438,7 +438,7 @@ impl CrateScoreInfo {
         score_add!(table, positive_score, self.non_yanked_releases, 1.5);
         score_add!(table,
                    positive_score,
-                   self.last_2_releases_downloads / 2,
+                   self.last_2_non_yanked_releases_downloads / 2,
                    0.001);
 
         score_add!(table, positive_score, self.dependants, 0.5);

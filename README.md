@@ -298,7 +298,7 @@
 #### self.non_yanked_releases
    The number of non-yanked releases the crate has.
 
-#### self.last_2_releases_downloads / 2
+#### self.last_2_non_yanked_releases_downloads / 2
    An estimate for the current number of downloads per release.
    This factor has the weakest weight (0.001) among all others.
 
