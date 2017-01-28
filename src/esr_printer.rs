@@ -105,7 +105,7 @@ impl EsrPrinter {
         score_str.push_str(&format!("{}\n", self.cyan_bold(&*frame)));
 
         for line in table {
-            if line.2.starts_with('-') {
+            if line.1.find("* -").is_some() {
                 let line_str = format!("{} | {} | {}\n",
                                        self.yellow_bold(&*line.0),
                                        self.red_bold(&*line.1),
