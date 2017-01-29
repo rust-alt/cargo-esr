@@ -132,8 +132,13 @@ impl CrateScores {
         };
 
         let releases = self.crate_full.get_score_info().get_releases();
+        let non_yanked = self.crate_full.get_score_info().get_non_yanked_releases();
+        let yanked = releases - non_yanked;
         let m_s_l_r = self.crate_full.get_score_info().get_months_since_last_release();
-        let releases_msg = format!("{} ({:.1} months without a release)", releases, m_s_l_r);
+        let releases_msg = format!("{}+{} ({:.1} months since last non-yanked release)",
+                                   self.printer.green_bold(&format!("{}", non_yanked)),
+                                   self.printer.red_bold(&format!("{}", yanked)),
+                                   m_s_l_r);
 
         let dependants = self.crate_full.get_score_info().get_dependants();
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
@@ -144,8 +149,8 @@ impl CrateScores {
                                all_yanked_str,
                                self.score_crate(),
                                self.score_repo(),
-                               self.printer.msg_pair("Dependants ", &dependants_msg),
                                self.printer.msg_pair("Releases   ", &releases_msg),
+                               self.printer.msg_pair("Dependants ", &dependants_msg),
                                self.printer.msg_pair("Max Version",
                                               self.crate_full.get_info().get_max_version()),
                                self.printer.msg_pair("License    ",

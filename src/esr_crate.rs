@@ -467,6 +467,10 @@ impl CrateScoreInfo {
         self.releases
     }
 
+    pub fn get_non_yanked_releases(&self) -> usize {
+        self.non_yanked_releases
+    }
+
     pub fn get_months_since_last_release(&self) -> f64 {
         self.months_since_last_release
     }
