@@ -341,10 +341,10 @@ impl CrateScoreInfo {
         let activity_span_in_months = (last_activity.sec - first_activity.sec) as f64 /
                                       (3600.0 * 24.0 * 30.5);
 
-        let months_since_last_release = if crate_info.self_info.releases.is_empty() {
+        let months_since_last_release = if crate_info.non_yanked_releases().is_empty() {
             (curr_time - first_activity.sec) as f64 / (3600.0 * 24.0 * 30.5)
         } else {
-            let last_release = &crate_info.self_info.releases[0];
+            let last_release = crate_info.non_yanked_releases()[0];
             let last_release_date =
                 time::strptime(&last_release.created_at, "%FT%TZ")?.to_timespec();
             (curr_time - last_release_date.sec) as f64 / (3600.0 * 24.0 * 30.5)

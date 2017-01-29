@@ -335,8 +335,10 @@
    results displayed.
 
 #### self.months_since_last_release.powf(1.5)
-   The number of months (floating point) since the last version released. This is
-   a negative factor.
+   The number of months (floating point) since the last non-yanked version
+   released.
+
+   This is a negative factor.
 
    Non-linear because the longer the crate is inactive, the more we want to punish it.
 
