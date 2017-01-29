@@ -311,8 +311,8 @@ pub struct CrateScoreInfo {
     hard_dependants_on_current_versions: usize,
     dependants_from_non_owners: usize,
     // -ve
-    all_yanked: usize,
     months_since_last_release: f64,
+    all_yanked: usize,
 }
 
 impl CrateScoreInfo {
@@ -414,8 +414,8 @@ impl CrateScoreInfo {
             hard_dependants_on_current_versions,
             dependants_from_non_owners,
             // -ve
-            all_yanked,
             months_since_last_release,
+            all_yanked,
         })
     }
 
@@ -446,11 +446,11 @@ impl CrateScoreInfo {
         score_add!(table, positive_score, self.dependants_from_non_owners, 2.5);
 
         // -ve
-        score_add!(table, negative_score, self.all_yanked, -5000.0);
         score_add!(table,
                    negative_score,
                    self.months_since_last_release.powf(1.5),
                    -2.0);
+        score_add!(table, negative_score, self.all_yanked, -5000.0);
 
         (table, positive_score, negative_score)
     }
