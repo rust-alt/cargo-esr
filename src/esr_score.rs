@@ -28,7 +28,7 @@ impl CrateScores {
     pub fn from_id(id: &str, printer: EsrPrinter) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
         let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
-            Some(RepoInfoWithScore::from_id(gh_id))
+            Some(RepoInfoWithScore::from_id(&gh_id))
         } else {
             None
         };
@@ -43,7 +43,7 @@ impl CrateScores {
     pub fn from_id_with_token(id: &str, gh_token: &str, printer: EsrPrinter) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
         let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
-            Some(RepoInfoWithScore::from_id_with_token(gh_id, gh_token))
+            Some(RepoInfoWithScore::from_id_with_token(&gh_id, gh_token))
         } else {
             None
         };

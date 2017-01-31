@@ -17,6 +17,8 @@
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate serde_derive;
 
 extern crate ansi_term;
@@ -29,6 +31,7 @@ extern crate hyper_native_tls;
 extern crate time;
 extern crate semver;
 extern crate pipeliner;
+extern crate regex;
 
 #[macro_use]
 mod esr_macros;

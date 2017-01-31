@@ -13,8 +13,10 @@ use time;
 use hyper::client::Client;
 use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
+use regex::{self, Regex};
 
 use std::collections::HashMap;
+use std::result::Result as StdResult;
 
 use esr_errors::*;
 use esr_from::{self, EsrFrom, DefEsrFrom, EsrFromMulti};
@@ -231,22 +233,28 @@ impl CrateInfo {
             .as_ref()
             .map(|s| s.as_str())
     }
-    pub fn github_id(&self) -> Option<&str> {
-        if let Some(ref repo) = self.self_info.general_info.repository {
-            // Regex Hater
-            if repo.starts_with("https://github.com/") || repo.starts_with("https://github.com/") {
-                let split: Vec<_> = repo.split("/github.com/").collect();
 
-                if split.len() == 2 && split[1].matches('/').count() == 1 {
-                    if split[1].ends_with(".git") {
-                        return Some(&split[1][..split[1].len() - ".git".len()]);
-                    } else {
-                        return Some(split[1]);
-                    }
+    fn github_re() -> StdResult<&'static Regex, &'static regex::Error> {
+        lazy_static! {
+            static ref RE: StdResult<Regex, regex::Error> =
+                Regex::new(r".+://github.com/(.+?/.+?)(.git|/|$).*");
+        }
+        RE.as_ref()
+    }
+
+    pub fn github_id(&self) -> Option<String> {
+        let repo_opt = &self.self_info.general_info.repository;
+        let re_res = Self::github_re();
+
+        match (repo_opt, re_res) {
+            (&Some(ref repo), Ok(re)) => {
+                match re.captures(repo) {
+                    Some(ref cap) if cap.len() >= 2 => Some(String::from(&cap[1])),
+                    _ => None,
                 }
             }
+            _ => None,
         }
-        None
     }
 
     pub fn from_id(id: &str) -> Result<Self> {
