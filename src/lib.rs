@@ -9,9 +9,7 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-#![feature(more_struct_aliases)]
 #![feature(inclusive_range_syntax)]
-#![feature(repeat_str)]
 #![feature(field_init_shorthand)]
 
 #[macro_use]
