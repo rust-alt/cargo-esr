@@ -248,8 +248,8 @@
                   self.dependants                  |     81 * 0.500     | +40.500
      self.hard_dependants_on_current_versions      |     43 * 1.000     | +43.000
           self.dependants_from_non_owners          |     71 * 2.500     | +177.500
-                  self.all_yanked                  |   0 * -5000.000    | 0.000
      self.months_since_last_release.powf(1.5)      |   0.046 * -2.000   | -0.092
+             self.empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
  Crate Score: 404.974 (+405.066 / -0.092)
  -------------------------------------------------
@@ -331,10 +331,12 @@
    one popular , but arguably deprecated, crate to another. It's
    the anti-anecdote factor, of sorts.
 
-#### self.all_yanked
-   Whether all releases of the crate have been yanked. This is a strong
-   negative factor (-5000.0), with an additional indicator in the search
-   results displayed.
+#### self.empty_or_all_yanked
+   Whether the crate has no releases, or max_version is `0.0.0`, or all releases
+   of the crate have been yanked.
+
+   This is a strong negative factor (-5000.0), with an additional indicator in
+   the search results displayed.
 
 #### self.months_since_last_release.powf(1.5)
    The number of months (floating point) since the last non-yanked version

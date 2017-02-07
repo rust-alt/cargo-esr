@@ -121,8 +121,8 @@ impl CrateScores {
     fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, String) {
         let (pos, neg) = self.crate_full.get_score_tuple();
 
-        let all_yanked_str = match self.crate_full.get_info().all_yanked() {
-            true => self.printer.red_bold("(yanked)"),
+        let empty_or_all_yanked_str = match self.crate_full.get_info().empty_or_all_yanked() {
+            true => self.printer.red_bold("(empty/all yanked)"),
             false => String::new(),
         };
 
@@ -146,7 +146,7 @@ impl CrateScores {
 
         let info_str = format!("{} {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n",
                                self.printer.blue_bold(id),
-                               all_yanked_str,
+                               empty_or_all_yanked_str,
                                self.score_crate(),
                                self.score_repo(),
                                self.printer.msg_pair("Releases   ", &releases_msg),

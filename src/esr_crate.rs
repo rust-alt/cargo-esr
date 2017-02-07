@@ -155,12 +155,16 @@ impl CrateInfo {
             .collect()
     }
 
-    pub fn all_yanked(&self) -> bool {
-        self.self_info
+    pub fn empty_or_all_yanked(&self) -> bool {
+        let no_releases = self.self_info.releases.is_empty();
+        let empty_release = self.get_max_version() == "0.0.0";
+        let all_yanked = self.self_info
             .releases
             .iter()
             .find(|release| !release.yanked)
-            .is_none()
+            .is_none();
+
+        no_releases || empty_release || all_yanked
     }
 
     // Current versions include max_ver, the last release,
@@ -320,7 +324,7 @@ pub struct CrateScoreInfo {
     dependants_from_non_owners: usize,
     // -ve
     months_since_last_release: f64,
-    all_yanked: usize,
+    empty_or_all_yanked: usize,
 }
 
 impl CrateScoreInfo {
@@ -330,7 +334,7 @@ impl CrateScoreInfo {
         let has_desc = general_info.description.is_some() as usize;
         let has_docs = general_info.documentation.is_some() as usize;
         let has_license = general_info.license.is_some() as usize;
-        let all_yanked = crate_info.all_yanked() as usize;
+        let empty_or_all_yanked = crate_info.empty_or_all_yanked() as usize;
 
         let releases = crate_info.all_releases().len();
         let non_yanked_releases = crate_info.non_yanked_releases().len();
@@ -423,7 +427,7 @@ impl CrateScoreInfo {
             dependants_from_non_owners,
             // -ve
             months_since_last_release,
-            all_yanked,
+            empty_or_all_yanked,
         })
     }
 
@@ -458,7 +462,7 @@ impl CrateScoreInfo {
                    negative_score,
                    self.months_since_last_release.powf(1.5),
                    -2.0);
-        score_add!(table, negative_score, self.all_yanked, -5000.0);
+        score_add!(table, negative_score, self.empty_or_all_yanked, -5000.0);
 
         (table, positive_score, negative_score)
     }
