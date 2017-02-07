@@ -135,7 +135,7 @@ pub trait EsrFrom: Sized + Deserialize {
 
     fn from_url_with_client(url: &str, client: &Client) -> Result<Self> {
         let bytes = Self::bytes_from_url_with_client(url, client)?;
-        Self::from_bytes(&bytes[..])
+        Self::from_bytes(&*bytes)
     }
 
     fn from_url(url: &str) -> Result<Self> {
