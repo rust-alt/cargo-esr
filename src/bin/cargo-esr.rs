@@ -22,6 +22,23 @@ use cargo_esr::esr_printer::EsrPrinter;
 
 use std::env;
 
+fn check_limit(limit: &str, printer: EsrPrinter) -> usize {
+    match str::parse::<usize>(limit) {
+        Ok(limit_num) => {
+            if limit_num < 3 || limit_num > 30 {
+                printer.limit_out_of_range(limit_num, 3, 30);
+                std::process::exit(1);
+            } else {
+                limit_num
+            }
+        },
+        Err(_) => {
+            printer.limit_invalid(limit);
+            std::process::exit(1);
+        },
+    }
+}
+
 fn main() {
     // clap
     let mut args: Vec<_> = env::args().collect();
@@ -43,22 +60,13 @@ fn main() {
 
     let crate_only = m.is_present("crate-only");
     let sort_positive = m.is_present("sort-positive");
-    let limit = m.value_of("limit").unwrap_or("10");
+    let results_limit = m.value_of("results-limit").unwrap_or("10");
+    let search_limit = m.value_of("search-limit").unwrap_or("30");
     let is_tty = isatty::stdout_isatty() && !m.is_present("no-color");
     let printer = EsrPrinter::new_with_term(is_tty);
 
-    match str::parse::<u8>(limit) {
-        Ok(limit_num) => {
-            if limit_num < 3 || limit_num > 30 {
-                printer.limit_out_of_range(limit_num, 3, 30);
-                std::process::exit(1);
-            }
-        },
-        Err(_) => {
-            printer.limit_invalid(limit);
-            std::process::exit(1);
-        },
-    }
+    let results_limit_num = check_limit(results_limit, printer);
+    let search_limit_num = check_limit(search_limit, printer);
 
     let mut gh_token = String::with_capacity(48);
     if !crate_only {
@@ -95,7 +103,7 @@ fn main() {
                 .trim_right_matches('+')
                 .to_string();
 
-            let search_res = CrateSearch::from_id_single_page(&("per_page=".to_string() + limit + "&q=" +
+            let search_res = CrateSearch::from_id_single_page(&("per_page=".to_string() + search_limit + "&q=" +
                                                                 &search_str));
 
             if let Ok(search) = search_res {
@@ -106,8 +114,17 @@ fn main() {
                     std::process::exit(1);
                 }
 
-                let crates_scores_res = CrateScores::collect_scores(crates, &gh_token, crate_only, printer);
-                CrateScores::print_search_results(&*crates_scores_res, sort_positive, printer);
+                let crates_scores_res = CrateScores::collect_scores(
+                    crates,
+                    &gh_token,
+                    crate_only,
+                    search_limit_num,
+                    printer);
+                CrateScores::print_search_results(
+                    &*crates_scores_res,
+                    sort_positive,
+                    results_limit_num,
+                    printer);
             } else {
                 printer.search_failed(&search_str);
                 std::process::exit(1);

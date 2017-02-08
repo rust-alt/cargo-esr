@@ -1,5 +1,5 @@
 name: "cargo-esr"
-version: "0.1"
+version: "0.2"
 author: "Mohammad AlSaleh <CE.Mohammad.AlSaleh at gmail.com>"
 about: "cargo's Extended Search & Ranking tool"
 args:
@@ -16,12 +16,19 @@ args:
       takes_value: true
       empty_values: false
       help: "Get detailed score of a crate"
-  - limit:
+  - search-limit:
       short: l
-      long: limit
+      long: search-limit
+      aliases: [limit]
       takes_value: true
       empty_values: false
-      help: "Limit the number of search results (default: 10, valid: 3-30)"
+      help: "Limit the number of searched & ranked items (default: 30, valid: 3-30)"
+  - results-limit:
+      short: L
+      long: results-limit
+      takes_value: true
+      empty_values: false
+      help: "Limit the number of top-ranking results shown (default: 10, valid: 3-30)"
   - crate-only:
       short: o
       long: crate-only

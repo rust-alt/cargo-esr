@@ -138,7 +138,7 @@ impl EsrPrinter {
         println!("{}", self.red_bold(&msg));
     }
 
-    pub fn limit_out_of_range(&self, limit: u8, min: u8, max: u8) {
+    pub fn limit_out_of_range(&self, limit: usize, min: usize, max: usize) {
         let msg = format!("{} is out of the range of valid limits. \
                           Please pass a value between {} and {}.", limit, min, max);
         println!("{}", self.yellow_bold(&msg));

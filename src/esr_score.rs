@@ -100,19 +100,19 @@ impl CrateScores {
 
     // =================
 
-    pub fn collect_scores(crates: &[CrateGeneralInfo], token: &str, crate_only: bool, printer: EsrPrinter) -> Vec<(String, Result<Self>)> {
+    pub fn collect_scores(crates: &[CrateGeneralInfo], token: &str, crate_only: bool, limit: usize, printer: EsrPrinter) -> Vec<(String, Result<Self>)> {
         let id_token_pair: Vec<_> = crates.iter()
             .map(|cr| (String::from(cr.get_id()), String::from(token)))
             .collect();
 
         if crate_only {
             id_token_pair.into_iter()
-                .with_threads(10)
+                .with_threads(limit)
                 .map(move |(id, _)| (id.clone(), CrateScores::from_id_crate_only(&id, printer)))
                 .collect()
         } else {
             id_token_pair.into_iter()
-                .with_threads(10)
+                .with_threads(limit)
                 .map(move |(id, token)| (id.clone(), CrateScores::from_id_with_token(&id, &token, printer)))
                 .collect()
         }
@@ -165,7 +165,7 @@ impl CrateScores {
         (sort_score, info_str)
     }
 
-    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, printer: EsrPrinter) {
+    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize, printer: EsrPrinter) {
         let mut results_vec = Vec::with_capacity(16);
         for res in results {
             match *res {
@@ -180,7 +180,7 @@ impl CrateScores {
 
         // -sort_score to get scores in reverse
         results_vec.sort_by_key(|&(sort_score, _)| -sort_score as i64);
-        for (num, result) in results_vec.iter().enumerate() {
+        for (num, result) in results_vec.iter().take(limit).enumerate() {
             println!("{} {}",
                      printer.blue_bold(&format!("({})", num + 1)),
                      result.1);

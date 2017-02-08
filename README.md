@@ -57,7 +57,7 @@
 
  ```
  $ cargo esr -h
- cargo-esr 0.1
+ cargo-esr 0.2
  cargo's Extended Search & Ranking tool
  
  USAGE:
@@ -67,14 +67,20 @@
      -o, --crate-only       Get crate info only, without repository scores
      -h, --help             Prints help information
      -n, --no-color         Force disable colors and all formattings
-     -p, --sort-positive    Sort by positive scores only. Without taking inactivity into account
+     -p, --sort-positive    Sort by positive scores only. Without taking inactivity
+                            into account
      -V, --version          Prints version information
  
  OPTIONS:
-     -g, --gh-token <CARGO_ESR_GH_TOKEN>    Set GitHub Access Token (https://github.com/settings/tokens/new)
-     -l, --limit <limit>                    Limit the number of search results (default: 10, valid: 3-30)
+     -g, --gh-token <CARGO_ESR_GH_TOKEN>
+             Set GitHub Access Token (https://github.com/settings/tokens/new)
+     -L, --results-limit <results-limit>
+             Limit the number of top-ranking results shown (default: 10, valid: 3-30)
+     -l, --search-limit <search-limit>
+             Limit the number of searched & ranked items (default: 30, valid: 3-30)
      -c, --score <score>                    Get detailed score of a crate
-     -s, --search <search>...               Search crates.io and return results sorted by score
+     -s, --search <search>...
+             Search crates.io and return results sorted by score
  ```
 
  > Getting repository information requires passing
@@ -199,18 +205,18 @@
    Description: Lightweight non-blocking IO support windows and linux
  ```
 
- The default number of results requested is 10. You can change this default
- with `-l/--limit`. Allowed values (for now) range from 3 to 30.
+ The default number of searched and ranked crates is 30. You can use
+ `-l/--search-limit` to change this default.
 
- Passing `-o/--crate-only` will skip getting repository scores without affecting the order of
- the results. You will get results faster. And you wouldn't have to provide
- a GitHub access token.
+ The default number of results shown is 10. You can use `-L/--results-limit`
+ to change this default.
 
- The default tries to strike a balance between the accuracy of the results
- (matching the search pattern), and the quality (score) of the results at the top.
+ Use `--search-limit` with a lower value if the top results shown are irrelevant.
 
- A larger limit may put irrelevant results at the top. A smaller limit may
- miss the best crates, in favor of ones matching the search pattern closer.
+
+ Passing `-o/--crate-only` will skip getting repository scores, without affecting
+ the order of the results. You will get results faster. And you won't be required
+ to use a GitHub access token.
 
  Now, compare the results we got above here with the results from `cargo search`, which match
  the results [you get on crates.io](https://crates.io/search?q=async+IO):
