@@ -104,10 +104,10 @@
  ```
  $ cargo esr -s async
  (1) futures
-   Crate Score: 435.684 (+436.020 / -0.336)
-   Repo Score : 659.578 (+659.578 / -0.000)
+   Crate Score: 464.403 (+464.750 / -0.347)
+   Repo Score : 659.776 (+659.779 / -0.003)
    Releases   : 10+1 (0.3 months since last non-yanked release)
-   Dependants : 97 (84 from non owners)
+   Dependants : 98 (85 from non owners)
    Max Version: 0.1.10
    License    : MIT/Apache-2.0
    Repository : https://github.com/alexcrichton/futures-rs
@@ -115,8 +115,8 @@
  composability, and iterator-like interfaces.
  
  (2) mio
-   Crate Score: 422.494 (+423.192 / -0.698)
-   Repo Score : 642.520 (+642.906 / -0.386)
+   Crate Score: 420.217 (+420.929 / -0.712)
+   Repo Score : 642.542 (+642.920 / -0.379)
    Releases   : 22+0 (0.5 months since last non-yanked release)
    Dependants : 85 (75 from non owners)
    Max Version: 0.6.4
@@ -124,9 +124,29 @@
    Repository : https://github.com/carllerche/mio
    Description: Lightweight non-blocking IO
  
- (3) mioco
-   Crate Score: 79.671 (+106.238 / -26.567)
-   Repo Score : 268.311 (+307.071 / -38.760)
+ (3) handy_async
+   Crate Score: 47.065 (+47.321 / -0.256)
+   Repo Score : 7.975 (+20.318 / -12.344)
+   Releases   : 7+0 (0.3 months since last non-yanked release)
+   Dependants : 2 (0 from non owners)
+   Max Version: 0.2.6
+   License    : MIT
+   Repository : https://github.com/sile/handy_async
+   Description: A handy library for describing asynchronous code declaratively
+ 
+ (4) pg_async
+   Crate Score: 46.377 (+46.627 / -0.250)
+   Repo Score : 7.992 (+15.288 / -7.296)
+   Releases   : 10+0 (0.3 months since last non-yanked release)
+   Dependants : 0 (0 from non owners)
+   Max Version: 0.4.1
+   License    : MIT
+   Repository : https://github.com/ArtemGr/pg_async.rs
+   Description: Asynchronous, HA (master-master) PostgreSQL driver on top of libpq
+ 
+ (5) mioco
+   Crate Score: 46.634 (+73.247 / -26.613)
+   Repo Score : 268.212 (+307.071 / -38.859)
    Releases   : 13+0 (5.6 months since last non-yanked release)
    Dependants : 2 (1 from non owners)
    Max Version: 0.8.1
@@ -134,39 +154,9 @@
    Repository : https://github.com/dpc/mioco
    Description: Scalable, asynchronous IO coroutine-based handling (aka MIO COroutines).
  
- (4) gj
-   Crate Score: 67.622 (+126.381 / -58.759)
-   Repo Score : -69.039 (+60.865 / -129.903)
-   Releases   : 21+0 (9.5 months since last non-yanked release)
-   Dependants : 2 (0 from non owners)
-   Max Version: 0.2.0
-   License    : MIT
-   Repository : https://github.com/dwrensha/gj
-   Description: Event loop and promises.
- 
- (5) pg_async
-   Crate Score: 65.791 (+66.032 / -0.241)
-   Repo Score : 8.040 (+15.288 / -7.248)
-   Releases   : 10+0 (0.2 months since last non-yanked release)
-   Dependants : 0 (0 from non owners)
-   Max Version: 0.4.1
-   License    : MIT
-   Repository : https://github.com/ArtemGr/pg_async.rs
-   Description: Asynchronous, HA (master-master) PostgreSQL driver on top of libpq
- 
- (6) handy_async
-   Crate Score: 61.715 (+61.962 / -0.247)
-   Repo Score : 8.017 (+20.318 / -12.301)
-   Releases   : 7+0 (0.2 months since last non-yanked release)
-   Dependants : 2 (0 from non owners)
-   Max Version: 0.2.6
-   License    : MIT
-   Repository : https://github.com/sile/handy_async
-   Description: A handy library for describing asynchronous code declaratively
- 
- (7) capnp-futures
-   Crate Score: 59.654 (+59.917 / -0.263)
-   Repo Score : 6.469 (+19.620 / -13.151)
+ (6) capnp-futures
+   Crate Score: 45.649 (+45.922 / -0.273)
+   Repo Score : 6.415 (+19.620 / -13.205)
    Releases   : 4+0 (0.3 months since last non-yanked release)
    Dependants : 1 (0 from non owners)
    Max Version: 0.1.1
@@ -174,19 +164,9 @@
    Repository : https://github.com/dwrensha/capnp-futures-rs
    Description: async serialization for Cap'n Proto messages
  
- (8) amy
-   Crate Score: 57.633 (+75.281 / -17.648)
-   Repo Score : -12.780 (+40.168 / -52.949)
-   Releases   : 15+0 (4.3 months since last non-yanked release)
-   Dependants : 1 (0 from non owners)
-   Max Version: 0.6.0
-   License    : Apache-2.0
-   Repository : https://github.com/andrewjstone/amy
-   Description: Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
- 
- (9) fibers
-   Crate Score: 53.193 (+53.243 / -0.050)
-   Repo Score : 8.190 (+15.063 / -6.873)
+ (7) fibers
+   Crate Score: 41.799 (+41.855 / -0.056)
+   Repo Score : 8.150 (+15.063 / -6.913)
    Releases   : 4+0 (0.1 months since last non-yanked release)
    Dependants : 1 (0 from non owners)
    Max Version: 0.1.3
@@ -194,9 +174,9 @@
    Repository : https://github.com/dwango/fibers-rs
    Description: A Rust library to execute a number of lightweight asynchronous tasks (a.k.a, fibers) based on futures and mio
  
- (10) mysql_async
-   Crate Score: 52.572 (+53.148 / -0.576)
-   Repo Score : 22.468 (+28.740 / -6.273)
+ (8) mysql_async
+   Crate Score: 40.121 (+40.709 / -0.589)
+   Repo Score : 22.418 (+28.740 / -6.322)
    Releases   : 4+0 (0.4 months since last non-yanked release)
    Dependants : 0 (0 from non owners)
    Max Version: 0.5.0
@@ -204,6 +184,26 @@
    Repository : https://github.com/blackbeam/mysql_async
    Description: Tokio based asynchronous MySql client library.
  
+ (9) couchbase
+   Crate Score: 29.450 (+29.824 / -0.374)
+   Repo Score : 34.964 (+36.477 / -1.514)
+   Releases   : 2+0 (0.3 months since last non-yanked release)
+   Dependants : 0 (0 from non owners)
+   Max Version: 0.1.1
+   License    : Apache-2.0
+   Repository : https://github.com/couchbaselabs/couchbase-rs
+   Description: The Couchbase Rust SDK
+ 
+ (10) amy
+   Crate Score: 28.152 (+45.840 / -17.688)
+   Repo Score : -12.900 (+40.168 / -53.068)
+   Releases   : 15+0 (4.3 months since last non-yanked release)
+   Dependants : 1 (0 from non owners)
+   Max Version: 0.6.0
+   License    : Apache-2.0
+   Repository : https://github.com/andrewjstone/amy
+   Description: Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
+
  ```
 
  The default number of searched and ranked crates is 30. You can use
@@ -248,31 +248,33 @@
                    self.has_desc                   |     1 * 5.000      | +5.000
                  self.has_license                  |     1 * 5.000      | +5.000
                    self.has_docs                   |     1 * 15.000     | +15.000
-      self.activity_span_in_months.powf(0.5)       |   5.137 * 10.000   | +51.373
-                   self.releases                   |     22 * 1.500     | +33.000
-             self.non_yanked_releases              |     22 * 1.500     | +33.000
-   self.last_2_non_yanked_releases_downloads / 2   |    1693 * 0.001    | +1.693
-                  self.dependants                  |     81 * 0.500     | +40.500
-     self.hard_dependants_on_current_versions      |     43 * 1.000     | +43.000
-          self.dependants_from_non_owners          |     71 * 2.500     | +177.500
-     self.months_since_last_release.powf(1.5)      |   0.046 * -2.000   | -0.092
+      self.activity_span_in_months.powf(0.5)       |   5.137 * 6.000    | +30.824
+                   self.releases                   |     22 * 0.750     | +16.500
+             self.non_yanked_releases              |     22 * 0.750     | +16.500
+   self.last_2_non_yanked_releases_downloads / 2   |    3855 * 0.001    | +3.855
+                  self.dependants                  |     85 * 0.500     | +42.500
+               self.hard_dependants                |     82 * 0.750     | +61.500
+        self.dependants_on_current_versions        |     49 * 0.750     | +36.750
+          self.dependants_from_non_owners          |     75 * 2.500     | +187.500
+     self.months_since_last_release.powf(1.5)      |   0.356 * -2.000   | -0.712
              self.empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
- Crate Score: 404.974 (+405.066 / -0.092)
+ Crate Score: 420.217 (+420.929 / -0.712)
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
-                 self.subscribers                  |    115 * 0.500     | +57.500
-            self.contributors_up_to_100            |     76 * 3.000     | +228.000
-      self.commits_from_upto_100_contributors      |    472 * 0.100     | +47.200
-          self.secondary_contribution_pct          |     46 * 5.000     | +230.000
-        self.push_span_in_months.powf(0.5)         |   5.408 * 5.000    | +27.038
-       self.merged_pull_requests_in_last_100       |     31 * 2.000     | +62.000
-    self.months_since_last_pr_merged.powf(1.5)     |   0.046 * -1.000   | -0.046
-   self.months_since_last_issue_closed.powf(1.5)   |   0.046 * -1.000   | -0.046
-       self.months_since_last_push.powf(1.5)       |   0.003 * -4.000   | -0.013
+                 self.subscribers                  |    112 * 0.500     | +56.000
+            self.contributors_up_to_100            |     77 * 3.000     | +231.000
+      self.commits_from_upto_100_contributors      |    477 * 0.100     | +47.700
+          self.secondary_contribution_pct          |     45 * 5.000     | +225.000
+        self.push_span_in_months.powf(0.5)         |   5.444 * 5.000    | +27.220
+       self.merged_pull_requests_in_last_100       |     28 * 2.000     | +56.000
+    self.months_since_last_pr_merged.powf(1.5)     |   0.356 * -1.000   | -0.356
+   self.months_since_last_issue_closed.powf(1.5)   |   0.023 * -1.000   | -0.023
+       self.months_since_last_push.powf(1.5)       |   0.000 * -4.000   | -0.000
  
- Repo Score : 651.634 (+651.738 / -0.105)
+ Repo Score : 642.542 (+642.920 / -0.379)
+
  ```
 
  The first column shows the score contributor factors. The 2nd column shows
