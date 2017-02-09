@@ -178,8 +178,9 @@ impl CrateScores {
             }
         }
 
-        // -sort_score to get scores in reverse
-        results_vec.sort_by_key(|&(sort_score, _)| -sort_score as i64);
+        // Negation to get scores in reverse.
+        // `* 10000.0` to not lose order accuracy after casting.
+        results_vec.sort_by_key(|&(sort_score, _)| -(sort_score * 10000.0) as i64);
         for (num, result) in results_vec.iter().take(limit).enumerate() {
             println!("{} {}",
                      printer.blue_bold(&format!("({})", num + 1)),
