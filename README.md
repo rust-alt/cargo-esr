@@ -318,14 +318,16 @@
 #### self.dependants
    The number of dependants (a.k.a. reverse dependencies).
 
-#### self.hard_dependants_on_current_versions
-   The number of hard dependants on current versions of this crate.
+#### self.hard_dependants
+   The number of dependants that non-optionally depend on this crate in their default feature.
 
-   `hard` means the dependant non-optionally depends on this crate in their default feature.
+#### self.dependants_on_current_versions
+   The number of dependants that depend on a version of this crate that
+   is SemVer-compatible with one or more of the following:
 
-   `on_current_versions` mean the dependant depends on a version that is
-   either `max_ver`, or the last non-yanked one released, or a non-yanked
-   version that has been released in the last 30.5 days.
+   * max_version.
+   * The version of the last non-yanked release.
+   * Any non-yanked version that has been released in the last 30.5 days.
 
 #### self.dependants_from_non_owners
    The number of dependants from other authors than the authors of this
