@@ -102,107 +102,108 @@
 
 
  ```
- $ cargo esr -s async IO
- (1) mio
-   Crate Score: 436.044 (+436.079 / -0.034)
-   Repo Score : 653.685 (+653.720 / -0.034)
-   Dependants : 81 (71 from non owners)
-   Releases   : 22 (0.1 months without a release)
+ $ cargo esr -s async
+ (1) futures
+   Crate Score: 435.684 (+436.020 / -0.336)
+   Repo Score : 659.578 (+659.578 / -0.000)
+   Releases   : 10+1 (0.3 months since last non-yanked release)
+   Dependants : 97 (84 from non owners)
+   Max Version: 0.1.10
+   License    : MIT/Apache-2.0
+   Repository : https://github.com/alexcrichton/futures-rs
+   Description: An implementation of futures and streams featuring zero allocations,
+ composability, and iterator-like interfaces.
+ 
+ (2) mio
+   Crate Score: 422.494 (+423.192 / -0.698)
+   Repo Score : 642.520 (+642.906 / -0.386)
+   Releases   : 22+0 (0.5 months since last non-yanked release)
+   Dependants : 85 (75 from non owners)
    Max Version: 0.6.4
    License    : MIT
    Repository : https://github.com/carllerche/mio
    Description: Lightweight non-blocking IO
  
- (2) tokio-proto
-   Crate Score: 48.825 (+49.533 / -0.708)
-   Repo Score : 381.417 (+381.418 / -0.002)
-   Dependants : 6 (5 from non owners)
-   Releases   : 1 (0.5 months without a release)
-   Max Version: 0.1.0
-   License    : MIT/Apache-2.0
-   Repository : https://github.com/tokio-rs/tokio-proto
-   Description: A network application framework for rapid development and highly scalable
- production deployments of clients and servers.
+ (3) mioco
+   Crate Score: 79.671 (+106.238 / -26.567)
+   Repo Score : 268.311 (+307.071 / -38.760)
+   Releases   : 13+0 (5.6 months since last non-yanked release)
+   Dependants : 2 (1 from non owners)
+   Max Version: 0.8.1
+   License    : MPL-2.0
+   Repository : https://github.com/dpc/mioco
+   Description: Scalable, asynchronous IO coroutine-based handling (aka MIO COroutines).
  
- (3) handy_async
-   Crate Score: 46.168 (+49.147 / -2.979)
-   Repo Score : 1.305 (+17.264 / -15.960)
+ (4) gj
+   Crate Score: 67.622 (+126.381 / -58.759)
+   Repo Score : -69.039 (+60.865 / -129.903)
+   Releases   : 21+0 (9.5 months since last non-yanked release)
    Dependants : 2 (0 from non owners)
-   Releases   : 6 (1.3 months without a release)
-   Max Version: 0.2.5
+   Max Version: 0.2.0
+   License    : MIT
+   Repository : https://github.com/dwrensha/gj
+   Description: Event loop and promises.
+ 
+ (5) pg_async
+   Crate Score: 65.791 (+66.032 / -0.241)
+   Repo Score : 8.040 (+15.288 / -7.248)
+   Releases   : 10+0 (0.2 months since last non-yanked release)
+   Dependants : 0 (0 from non owners)
+   Max Version: 0.4.1
+   License    : MIT
+   Repository : https://github.com/ArtemGr/pg_async.rs
+   Description: Asynchronous, HA (master-master) PostgreSQL driver on top of libpq
+ 
+ (6) handy_async
+   Crate Score: 61.715 (+61.962 / -0.247)
+   Repo Score : 8.017 (+20.318 / -12.301)
+   Releases   : 7+0 (0.2 months since last non-yanked release)
+   Dependants : 2 (0 from non owners)
+   Max Version: 0.2.6
    License    : MIT
    Repository : https://github.com/sile/handy_async
    Description: A handy library for describing asynchronous code declaratively
  
- (4) fibers
-   Crate Score: 37.278 (+39.926 / -2.647)
-   Repo Score : 1.408 (+11.637 / -10.229)
+ (7) capnp-futures
+   Crate Score: 59.654 (+59.917 / -0.263)
+   Repo Score : 6.469 (+19.620 / -13.151)
+   Releases   : 4+0 (0.3 months since last non-yanked release)
    Dependants : 1 (0 from non owners)
-   Releases   : 2 (1.2 months without a release)
    Max Version: 0.1.1
+   License    : MIT
+   Repository : https://github.com/dwrensha/capnp-futures-rs
+   Description: async serialization for Cap'n Proto messages
+ 
+ (8) amy
+   Crate Score: 57.633 (+75.281 / -17.648)
+   Repo Score : -12.780 (+40.168 / -52.949)
+   Releases   : 15+0 (4.3 months since last non-yanked release)
+   Dependants : 1 (0 from non owners)
+   Max Version: 0.6.0
+   License    : Apache-2.0
+   Repository : https://github.com/andrewjstone/amy
+   Description: Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
+ 
+ (9) fibers
+   Crate Score: 53.193 (+53.243 / -0.050)
+   Repo Score : 8.190 (+15.063 / -6.873)
+   Releases   : 4+0 (0.1 months since last non-yanked release)
+   Dependants : 1 (0 from non owners)
+   Max Version: 0.1.3
    License    : MIT
    Repository : https://github.com/dwango/fibers-rs
    Description: A Rust library to execute a number of lightweight asynchronous tasks (a.k.a, fibers) based on futures and mio
  
- (5) handy_io
-   Crate Score: 31.654 (+36.923 / -5.268)
-   Repo Score : 1.305 (+17.264 / -15.960)
+ (10) mysql_async
+   Crate Score: 52.572 (+53.148 / -0.576)
+   Repo Score : 22.468 (+28.740 / -6.273)
+   Releases   : 4+0 (0.4 months since last non-yanked release)
    Dependants : 0 (0 from non owners)
-   Releases   : 3 (1.9 months without a release)
-   Max Version: 0.1.2
-   License    : MIT
-   Repository : https://github.com/sile/handy_io
-   Description: A handy pattern and futures based asynchronous I/O library
- 
- (6) tmp_mio
-   Crate Score: -4.643 (+35.856 / -40.499)
-   Repo Score : 267.222 (+390.570 / -123.348)
-   Dependants : 1 (1 from non owners)
-   Releases   : 1 (7.4 months without a release)
-   Max Version: 0.5.2
-   License    : MIT
-   Repository : https://github.com/ustulation/mio
-   Description: Temporary fork of the mio crate with windows bug fix
- 
- (7) td_revent
-   Crate Score: -6.415 (+41.803 / -48.218)
-   Repo Score : -154.893 (+13.448 / -168.341)
-   Dependants : 1 (0 from non owners)
-   Releases   : 6 (8.3 months without a release)
-   Max Version: 0.1.5
+   Max Version: 0.5.0
    License    : MIT/Apache-2.0
-   Repository : https://github.com/tickbh/td_revent
-   Description: Event library for Rust, Async IO similar to libevent
+   Repository : https://github.com/blackbeam/mysql_async
+   Description: Tokio based asynchronous MySql client library.
  
- (8) gio-2-0-sys
-   Crate Score: -84.773 (+26.739 / -111.512)
-   Repo Score : -290.090 (+44.991 / -335.081)
-   Dependants : 0 (0 from non owners)
-   Releases   : 2 (14.6 months without a release)
-   Max Version: 0.46.4
-   License    : LGPL-2.1+
-   Repository : https://github.com/gi-rust/gio-sys.git
-   Description: Import crate for Gio
- 
- (9) nio
-   Crate Score: -100.248 (+29.547 / -129.794)
-   Repo Score : -385.111 (+4.252 / -389.363)
-   Dependants : 0 (0 from non owners)
-   Releases   : 1 (16.1 months without a release)
-   Max Version: 0.0.1
-   License    : Apache-2.0
-   Repository : https://github.com/Cleawing/nio
-   Description: Just a stub for upcoming library
- 
- (10) event_rust
-   Crate Score: -108.027 (+35.792 / -143.819)
-   Repo Score : Error
-   Dependants : 0 (0 from non owners)
-   Releases   : 2 (17.3 months without a release)
-   Max Version: 0.1.1
-   License    : MIT
-   Repository : https://github.com/tickbh/event_rust
-   Description: Lightweight non-blocking IO support windows and linux
  ```
 
  The default number of searched and ranked crates is 30. You can use
