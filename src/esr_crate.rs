@@ -450,10 +450,10 @@ impl CrateScoreInfo {
         score_add!(table,
                    positive_score,
                    self.activity_span_in_months.powf(0.5),
-                   8.0);
+                   6.0);
 
-        score_add!(table, positive_score, self.releases, 1.0);
-        score_add!(table, positive_score, self.non_yanked_releases, 1.0);
+        score_add!(table, positive_score, self.releases, 0.75);
+        score_add!(table, positive_score, self.non_yanked_releases, 0.75);
         score_add!(table,
                    positive_score,
                    self.last_2_non_yanked_releases_downloads / 2,
