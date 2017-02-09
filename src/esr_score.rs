@@ -166,7 +166,7 @@ impl CrateScores {
     }
 
     pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize, printer: EsrPrinter) {
-        let mut results_vec = Vec::with_capacity(16);
+        let mut results_vec = Vec::with_capacity(32);
         for res in results {
             match *res {
                 (ref id, Ok(ref score_info)) => {

@@ -320,7 +320,8 @@ pub struct CrateScoreInfo {
     non_yanked_releases: usize,
     last_2_non_yanked_releases_downloads: usize,
     dependants: usize,
-    hard_dependants_on_current_versions: usize,
+    hard_dependants: usize,
+    dependants_on_current_versions: usize,
     dependants_from_non_owners: usize,
     // -ve
     months_since_last_release: f64,
@@ -366,17 +367,21 @@ impl CrateScoreInfo {
         let dependants = crate_info.dependants.dependants.len();
 
         let current_versions = crate_info.get_current_versions()?;
-        let hard_dependants_on_current_versions = crate_info.dependants
+        let hard_dependants = crate_info.dependants
             .dependants
             .iter()
             .filter(|dependant| dependant.default_features && !dependant.optional)
-            .filter_map(|dependant| {
+            .count();
+        let dependants_on_current_versions = crate_info.dependants
+            .dependants
+            .iter()
+            .filter(|dependant| {
                 current_versions.iter().find(|&ver| {
                     match (Version::parse(ver), VersionReq::parse(&*dependant.req)) {
                         (Ok(ver), Ok(req)) => req.matches(&ver),
                         _ => false,
                     }
-                })
+                }).is_some()
             })
             .count();
 
@@ -423,7 +428,8 @@ impl CrateScoreInfo {
             non_yanked_releases,
             last_2_non_yanked_releases_downloads,
             dependants,
-            hard_dependants_on_current_versions,
+            hard_dependants,
+            dependants_on_current_versions,
             dependants_from_non_owners,
             // -ve
             months_since_last_release,
@@ -454,7 +460,8 @@ impl CrateScoreInfo {
                    0.001);
 
         score_add!(table, positive_score, self.dependants, 0.5);
-        score_add!(table, positive_score, self.hard_dependants_on_current_versions, 1.0);
+        score_add!(table, positive_score, self.hard_dependants, 0.75);
+        score_add!(table, positive_score, self.dependants_on_current_versions, 0.75);
         score_add!(table, positive_score, self.dependants_from_non_owners, 2.5);
 
         // -ve
