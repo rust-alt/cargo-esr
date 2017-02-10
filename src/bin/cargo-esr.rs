@@ -22,11 +22,16 @@ use cargo_esr::esr_printer::EsrPrinter;
 
 use std::env;
 
+const LIMIT_LOW: usize = 3;
+const LIMIT_HIGH: usize = 30;
+
 fn check_limit(limit: &str, printer: EsrPrinter) -> usize {
     match str::parse::<usize>(limit) {
         Ok(limit_num) => {
-            if limit_num < 3 || limit_num > 30 {
-                printer.limit_out_of_range(limit_num, 3, 30);
+            let ll = LIMIT_LOW;
+            let lh = LIMIT_HIGH;
+            if limit_num < ll || limit_num > lh {
+                printer.limit_out_of_range(limit_num, ll, lh);
                 std::process::exit(1);
             } else {
                 limit_num
