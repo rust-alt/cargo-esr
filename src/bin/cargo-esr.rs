@@ -23,7 +23,7 @@ use cargo_esr::esr_printer::EsrPrinter;
 use std::env;
 
 const LIMIT_LOW: usize = 3;
-const LIMIT_HIGH: usize = 30;
+const LIMIT_HIGH: usize = 50;
 
 fn check_limit(limit: &str, printer: EsrPrinter) -> usize {
     match str::parse::<usize>(limit) {
