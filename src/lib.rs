@@ -11,6 +11,7 @@
 
 #![feature(inclusive_range_syntax)]
 #![feature(field_init_shorthand)]
+#![feature(conservative_impl_trait)]
 
 #[macro_use]
 extern crate error_chain;
@@ -19,7 +20,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate ansi_term;
+extern crate term_painter;
 extern crate serde;
 extern crate serde_json;
 extern crate hyper;

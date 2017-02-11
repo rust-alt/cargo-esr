@@ -25,20 +25,20 @@ use std::env;
 const LIMIT_LOW: usize = 3;
 const LIMIT_HIGH: usize = 50;
 
-fn check_limit(limit: &str, printer: EsrPrinter) -> usize {
+fn check_limit(limit: &str) -> usize {
     match str::parse::<usize>(limit) {
         Ok(limit_num) => {
             let ll = LIMIT_LOW;
             let lh = LIMIT_HIGH;
             if limit_num < ll || limit_num > lh {
-                printer.limit_out_of_range(limit_num, ll, lh);
+                EsrPrinter::limit_out_of_range(limit_num, ll, lh);
                 std::process::exit(1);
             } else {
                 limit_num
             }
         },
         Err(_) => {
-            printer.limit_invalid(limit);
+            EsrPrinter::limit_invalid(limit);
             std::process::exit(1);
         },
     }
@@ -67,11 +67,10 @@ fn main() {
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
     let search_limit = m.value_of("search-limit").unwrap_or("30");
-    let is_tty = isatty::stdout_isatty() && !m.is_present("no-color");
-    let printer = EsrPrinter::new_with_term(is_tty);
+    let formatted = isatty::stdout_isatty() && !m.is_present("no-color");
 
-    let results_limit_num = check_limit(results_limit, printer);
-    let search_limit_num = check_limit(search_limit, printer);
+    let results_limit_num = check_limit(results_limit);
+    let search_limit_num = check_limit(search_limit);
 
     let mut gh_token = String::with_capacity(48);
     if !crate_only {
@@ -80,7 +79,7 @@ fn main() {
         } else if let Ok(env_token) = std::env::var("CARGO_ESR_GH_TOKEN") {
             gh_token.push_str(&env_token);
         } else {
-            printer.no_token();
+            EsrPrinter::no_token();
             std::process::exit(1);
         }
     }
@@ -88,15 +87,15 @@ fn main() {
     match (m.value_of("score"), m.values_of("search")) {
         (Some(crate_name), _) => {
             let crate_scores_res = if crate_only {
-                CrateScores::from_id_crate_only(crate_name, printer)
+                CrateScores::from_id_crate_only(crate_name)
             } else {
-                CrateScores::from_id_with_token(crate_name, &gh_token, printer)
+                CrateScores::from_id_with_token(crate_name, &gh_token)
             };
 
             if let Ok(crate_scores) = crate_scores_res {
-                crate_scores.print_detailed_scores();
+                crate_scores.print_detailed_scores(formatted);
             } else {
-                printer.crate_no_score(crate_name);
+                EsrPrinter::crate_no_score(crate_name);
                 std::process::exit(1);
             }
         },
@@ -115,7 +114,7 @@ fn main() {
                 let crates = search.get_crates();
 
                 if crates.len() == 0 {
-                    printer.search_no_results(&search_str);
+                    EsrPrinter::search_no_results(&search_str);
                     std::process::exit(1);
                 }
 
@@ -123,15 +122,14 @@ fn main() {
                     crates,
                     &gh_token,
                     crate_only,
-                    search_limit_num,
-                    printer);
+                    search_limit_num);
                 CrateScores::print_search_results(
                     &*crates_scores_res,
                     sort_positive,
                     results_limit_num,
-                    printer);
+                    formatted);
             } else {
-                printer.search_failed(&search_str);
+                EsrPrinter::search_failed(&search_str);
                 std::process::exit(1);
             }
         },

@@ -13,7 +13,7 @@ use pipeliner::Pipeline;
 
 use esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
 use esr_github::RepoInfoWithScore;
-use esr_printer::EsrPrinter;
+use esr_printer::{EsrPrinter, EsrFormatter};
 use esr_errors::*;
 
 use std::f64;
@@ -21,11 +21,10 @@ use std::f64;
 pub struct CrateScores {
     crate_full: CrateInfoWithScore,
     repo_full: Option<Result<RepoInfoWithScore>>,
-    printer: EsrPrinter,
 }
 
 impl CrateScores {
-    pub fn from_id(id: &str, printer: EsrPrinter) -> Result<Self> {
+    pub fn from_id(id: &str) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
         let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
             Some(RepoInfoWithScore::from_id(&gh_id))
@@ -36,11 +35,10 @@ impl CrateScores {
         Ok(Self {
             crate_full,
             repo_full,
-            printer,
         })
     }
 
-    pub fn from_id_with_token(id: &str, gh_token: &str, printer: EsrPrinter) -> Result<Self> {
+    pub fn from_id_with_token(id: &str, gh_token: &str) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
         let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
             Some(RepoInfoWithScore::from_id_with_token(&gh_id, gh_token))
@@ -51,56 +49,54 @@ impl CrateScores {
         Ok(Self {
             crate_full,
             repo_full,
-            printer,
         })
     }
 
-    pub fn from_id_crate_only(id: &str, printer: EsrPrinter) -> Result<Self> {
+    pub fn from_id_crate_only(id: &str) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
 
         Ok(Self {
             crate_full,
             repo_full: None,
-            printer,
         })
     }
 
     // ====================
-    fn score_crate(&self) -> String {
+    fn score_crate(&self) -> [EsrFormatter; 4] {
         let (pos, neg) = self.crate_full.get_score_tuple();
-        self.printer.score_overview("Crate Score", pos, neg)
+        EsrPrinter::score_overview("Crate Score", pos, neg)
     }
 
-    fn score_repo(&self) -> String {
+    fn score_repo(&self) -> Vec<EsrFormatter> {
         if let Some(ref repo_full_res) = self.repo_full {
             if let Ok(ref repo_full) = *repo_full_res {
                 let (pos, neg) = repo_full.get_score_tuple();
-                self.printer.score_overview("Repo Score ", pos, neg)
+                EsrPrinter::score_overview("Repo Score ", pos, neg).to_vec()
             } else {
-                self.printer.score_error("Repo Score ")
+                EsrPrinter::score_error("Repo Score ").to_vec()
             }
         } else {
-            self.printer.score_na("Repo Score ")
+            EsrPrinter::score_na("Repo Score ").to_vec()
         }
     }
 
-    pub fn print_detailed_scores(&self) {
+    pub fn print_detailed_scores(&self, formatted: bool) {
         let table = self.crate_full.get_score_table();
-        println!("{}", self.printer.score_details("Crate Score Details", table));
-        println!("{}", self.score_crate());
+        EsrFormatter::print_grp(&EsrPrinter::score_details("Crate Score Details", table), formatted);
+        EsrFormatter::print_grp(&self.score_crate(), formatted);
 
         if let Some(ref repo_full_res) = self.repo_full {
             if let Ok(ref repo_full) = *repo_full_res {
                 let table = repo_full.get_score_table();
-                println!("{}", self.printer.score_details("Repo Score Details", table));
+                EsrFormatter::print_grp(&EsrPrinter::score_details("Repo Score Details", table), formatted);
             }
         }
-        println!("{}", self.score_repo());
+        EsrFormatter::print_grp(&*self.score_repo(), formatted);
     }
 
     // =================
 
-    pub fn collect_scores(crates: &[CrateGeneralInfo], token: &str, crate_only: bool, limit: usize, printer: EsrPrinter) -> Vec<(String, Result<Self>)> {
+    pub fn collect_scores(crates: &[CrateGeneralInfo], token: &str, crate_only: bool, limit: usize) -> Vec<(String, Result<Self>)> {
         let id_token_pair: Vec<_> = crates.iter()
             .map(|cr| (String::from(cr.get_id()), String::from(token)))
             .collect();
@@ -108,22 +104,22 @@ impl CrateScores {
         if crate_only {
             id_token_pair.into_iter()
                 .with_threads(limit)
-                .map(move |(id, _)| (id.clone(), CrateScores::from_id_crate_only(&id, printer)))
+                .map(move |(id, _)| (id.clone(), CrateScores::from_id_crate_only(&id)))
                 .collect()
         } else {
             id_token_pair.into_iter()
                 .with_threads(limit)
-                .map(move |(id, token)| (id.clone(), CrateScores::from_id_with_token(&id, &token, printer)))
+                .map(move |(id, token)| (id.clone(), CrateScores::from_id_with_token(&id, &token)))
                 .collect()
         }
     }
 
-    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, String) {
+    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, Vec<EsrFormatter>) {
         let (pos, neg) = self.crate_full.get_score_tuple();
 
-        let empty_or_all_yanked_str = match self.crate_full.get_info().empty_or_all_yanked() {
-            true => self.printer.red_bold("(empty/all yanked)"),
-            false => String::new(),
+        let empty_or_all_yanked_formatted = match self.crate_full.get_info().empty_or_all_yanked() {
+            true => EsrPrinter::all_yanked(),
+            false => EsrFormatter::trail_only("\n "),
         };
 
         let sort_score = match sort_positive {
@@ -135,37 +131,28 @@ impl CrateScores {
         let non_yanked = self.crate_full.get_score_info().get_non_yanked_releases();
         let yanked = releases - non_yanked;
         let m_s_l_r = self.crate_full.get_score_info().get_months_since_last_release();
-        let releases_msg = format!("{}+{} ({:.1} months since last non-yanked release)",
-                                   self.printer.green_bold(&format!("{}", non_yanked)),
-                                   self.printer.red_bold(&format!("{}", yanked)),
-                                   m_s_l_r);
+        let releases_formatted = EsrPrinter::releases(non_yanked, yanked, m_s_l_r);
 
         let dependants = self.crate_full.get_score_info().get_dependants();
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
         let dependants_msg = format!("{} ({} from non owners)", dependants, d_b_n_o);
 
-        let info_str = format!("{} {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n  {}\n",
-                               self.printer.blue_bold(id),
-                               empty_or_all_yanked_str,
-                               self.score_crate(),
-                               self.score_repo(),
-                               self.printer.msg_pair("Releases   ", &releases_msg),
-                               self.printer.msg_pair("Dependants ", &dependants_msg),
-                               self.printer.msg_pair("Max Version",
-                                              self.crate_full.get_info().get_max_version()),
-                               self.printer.msg_pair("License    ",
-                                              self.crate_full.get_info().get_license().unwrap_or("N/A")),
-                               self.printer.msg_pair("Repository ",
-                                              self.crate_full.get_info().get_repository().unwrap_or("N/A")),
-                               self.printer.msg_pair("Description",
-                                              self.crate_full.get_info().get_description().unwrap_or("N/A")
-                                              .trim()),
-                               );
+        let mut info_formatter = Vec::with_capacity(32);
+        info_formatter.push(EsrPrinter::id(id));
+        info_formatter.push(empty_or_all_yanked_formatted);
+        info_formatter.extend_from_slice(&self.score_crate());
+        info_formatter.extend_from_slice(&self.score_repo());
+        info_formatter.extend_from_slice(&*EsrPrinter::msg_pair_complex("Releases   ", &releases_formatted));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Dependants ", &dependants_msg));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Max Version", self.crate_full.get_info().get_max_version()));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("License    ", self.crate_full.get_info().get_license().unwrap_or("N/A")));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Repository ", self.crate_full.get_info().get_repository().unwrap_or("N/A")));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Description", self.crate_full.get_info().get_description().unwrap_or("N/A").trim()));
 
-        (sort_score, info_str)
+        (sort_score, info_formatter)
     }
 
-    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize, printer: EsrPrinter) {
+    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize, formatted: bool) {
         let mut results_vec = Vec::with_capacity(32);
         for res in results {
             match *res {
@@ -173,7 +160,7 @@ impl CrateScores {
                     results_vec.push(score_info.info_pair(id, sort_positive));
                 },
                 (ref id, Err(_)) => {
-                    results_vec.push((f64::MIN, format!("{}: Failed to get score info.", id)));
+                    results_vec.push((f64::MIN, vec![EsrPrinter::err(&format!("{}: Failed to get score info.", id))]));
                 },
             }
         }
@@ -182,9 +169,8 @@ impl CrateScores {
         // `* 10000.0` to not lose order accuracy after casting.
         results_vec.sort_by_key(|&(sort_score, _)| -(sort_score * 10000.0) as i64);
         for (num, result) in results_vec.iter().take(limit).enumerate() {
-            println!("{} {}",
-                     printer.blue_bold(&format!("({})", num + 1)),
-                     result.1);
+            EsrPrinter::id(&format!("({})", num + 1)).print(formatted);
+            EsrFormatter::print_grp(&result.1, formatted);
         }
     }
 }
