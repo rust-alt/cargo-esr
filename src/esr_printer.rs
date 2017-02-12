@@ -91,9 +91,10 @@ impl EsrPrinter {
         EsrFormatter::new(Red.bold(), "(empty/all yanked)", "\n ")
     }
 
-    pub fn releases(non_yanked: usize, yanked: usize, m_s_l_r: f64) -> [EsrFormatter; 3] {
+    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize, m_s_l_r: f64) -> [EsrFormatter; 4] {
         [
-            EsrFormatter::new(Green.bold(), &format!("{}", non_yanked), "+"),
+            EsrFormatter::new(Green.bold(), &format!("{}", stable), "+"),
+            EsrFormatter::new(Yellow.bold(), &format!("{}", non_yanked_pre), "+"),
             EsrFormatter::new(Red.bold(), &format!("{}", yanked), " ("),
             EsrFormatter::new(Bold.to_style(), &format!("{:.1} months since last non-yanked release", m_s_l_r), ")\n "),
         ]

@@ -129,9 +129,11 @@ impl CrateScores {
 
         let releases = self.crate_full.get_score_info().get_releases();
         let non_yanked = self.crate_full.get_score_info().get_non_yanked_releases();
+        let stable = self.crate_full.get_score_info().get_stable_releases();
         let yanked = releases - non_yanked;
+        let non_yanked_pre = non_yanked - stable;
         let m_s_l_r = self.crate_full.get_score_info().get_months_since_last_release();
-        let releases_formatted = EsrPrinter::releases(non_yanked, yanked, m_s_l_r);
+        let releases_formatted = EsrPrinter::releases(stable, non_yanked_pre, yanked, m_s_l_r);
 
         let dependants = self.crate_full.get_score_info().get_dependants();
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();

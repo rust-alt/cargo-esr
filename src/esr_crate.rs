@@ -155,6 +155,20 @@ impl CrateInfo {
             .collect()
     }
 
+    pub fn stable_releases(&self) -> Vec<&CrateReleaseInfo> {
+        self.non_yanked_releases()
+            .iter()
+            .map(|release| *release)
+            .filter(|release| {
+                if let Ok(ver) = Version::parse(&release.num) {
+                    !ver.is_prerelease()
+                } else {
+                    false
+                }
+            })
+            .collect()
+    }
+
     pub fn empty_or_all_yanked(&self) -> bool {
         let no_releases = self.self_info.releases.is_empty();
         let empty_release = self.get_max_version() == "0.0.0";
@@ -318,6 +332,7 @@ pub struct CrateScoreInfo {
     activity_span_in_months: f64,
     releases: usize,
     non_yanked_releases: usize,
+    stable_releases: usize,
     last_2_non_yanked_releases_downloads: usize,
     dependants: usize,
     hard_dependants: usize,
@@ -339,6 +354,7 @@ impl CrateScoreInfo {
 
         let releases = crate_info.all_releases().len();
         let non_yanked_releases = crate_info.non_yanked_releases().len();
+        let stable_releases = crate_info.stable_releases().len();
         let last_2_non_yanked_releases_downloads = crate_info
             .non_yanked_releases()
             .iter()
@@ -426,6 +442,7 @@ impl CrateScoreInfo {
             activity_span_in_months,
             releases,
             non_yanked_releases,
+            stable_releases,
             last_2_non_yanked_releases_downloads,
             dependants,
             hard_dependants,
@@ -452,8 +469,9 @@ impl CrateScoreInfo {
                    self.activity_span_in_months.powf(0.5),
                    6.0);
 
-        score_add!(table, positive_score, self.releases, 0.75);
-        score_add!(table, positive_score, self.non_yanked_releases, 0.75);
+        score_add!(table, positive_score, self.releases, 0.5);
+        score_add!(table, positive_score, self.non_yanked_releases, 0.5);
+        score_add!(table, positive_score, self.stable_releases, 0.5);
         score_add!(table,
                    positive_score,
                    self.last_2_non_yanked_releases_downloads / 2,
@@ -488,6 +506,10 @@ impl CrateScoreInfo {
 
     pub fn get_non_yanked_releases(&self) -> usize {
         self.non_yanked_releases
+    }
+
+    pub fn get_stable_releases(&self) -> usize {
+        self.stable_releases
     }
 
     pub fn get_months_since_last_release(&self) -> f64 {
