@@ -36,6 +36,7 @@ extern crate regex;
 mod esr_macros;
 mod esr_errors;
 mod esr_from;
+pub mod esr_util;
 pub mod esr_crate;
 pub mod esr_github;
 pub mod esr_score;

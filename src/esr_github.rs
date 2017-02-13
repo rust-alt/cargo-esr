@@ -9,10 +9,10 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use time;
 use pipeliner::Pipeline;
 
 use esr_from::{self, EsrFrom, DefEsrFrom};
+use esr_util;
 use esr_errors::*;
 
 #[derive(Deserialize, Debug)]
@@ -197,13 +197,11 @@ pub struct RepoScoreInfo {
 impl RepoScoreInfo {
     fn from_repo_info(repo_info: &RepoInfo) -> Result<Self> {
         let general_info = &repo_info.general_info;
-        let curr_time = time::get_time().sec;
-        let created_at = time::strptime(&general_info.created_at, "%FT%TZ")?.to_timespec().sec;
 
         // Days active, months since last push
-        let last_push = time::strptime(&general_info.pushed_at, "%FT%TZ")?.to_timespec().sec;
-        let push_span_in_months = (last_push - created_at) as f64 / (3600.0 * 24.0 * 30.5);
-        let months_since_last_push = (curr_time - last_push) as f64 / (3600.0 * 24.0 * 30.5);
+        let push_span_in_months =esr_util::span_in_months(&general_info.created_at,
+                                                          &general_info.pushed_at)?;
+        let months_since_last_push = esr_util::age_in_months(&general_info.pushed_at)?;
 
         // Get subscribers count
         let subscribers = general_info.subscribers_count;
@@ -229,39 +227,27 @@ impl RepoScoreInfo {
         let secondary_contribution_pct = secondary_contribution_pct_f64.ceil() as usize;
 
         // merged pull requests in last 100, months since last merged
-        let mut merged_pull_requests_in_last_100 = 0;
-        let mut months_since_last_pr_merged = (curr_time - created_at) as f64 /
-                                              (3600.0 * 24.0 * 30.5);
+        let merged_pull_requests_in_last_100 = repo_info.last_100_pull_requests
+            .iter()
+            .filter(|pr| pr.merged_at.is_some())
+            .count();
 
-        let last_pr_merged = repo_info.last_100_pull_requests
+        let last_pr_merged_opt = repo_info.last_100_pull_requests
             .iter()
             .filter(|pr| pr.merged_at.is_some())
             .nth(0);
 
-        if let Some(last_merged) = last_pr_merged {
-            let last_merged_at_str = last_merged.merged_at.as_ref().ok_or("Impossible")?;
-            let last_merged_at_time = time::strptime(last_merged_at_str, "%FT%TZ")?;
-            let last_merged_at = last_merged_at_time.to_timespec().sec;
-
-            months_since_last_pr_merged = (curr_time - last_merged_at) as f64 /
-                                          (3600.0 * 24.0 * 30.5);
-            merged_pull_requests_in_last_100 = repo_info.last_100_pull_requests
-                .iter()
-                .filter(|pr| pr.merged_at.is_some())
-                .count();
-        }
+        let months_since_last_pr_merged = match last_pr_merged_opt {
+            Some(pr) => esr_util::age_in_months(pr.merged_at.as_ref().ok_or("Impossible")?)?,
+            None => esr_util::age_in_months(&general_info.created_at)?,
+        };
 
         // months since last closed
-        let last_issue_closed = repo_info.last_100_closed_issues.get(0);
+        let last_issue_closed_opt = repo_info.last_100_closed_issues.get(0);
 
-        let months_since_last_issue_closed = if let Some(last_closed) = last_issue_closed {
-            let last_closed_at_str = last_closed.closed_at.as_ref().ok_or("Impossible")?;
-            let last_closed_at_time = time::strptime(last_closed_at_str, "%FT%TZ")?;
-            let last_closed_at = last_closed_at_time.to_timespec().sec;
-
-            (curr_time - last_closed_at) as f64 / (3600.0 * 24.0 * 30.5)
-        } else {
-            (curr_time - created_at) as f64 / (3600.0 * 24.0 * 30.5)
+        let months_since_last_issue_closed = match last_issue_closed_opt {
+            Some(issue) => esr_util::age_in_months(issue.closed_at.as_ref().ok_or("Impossible")?)?,
+            None => esr_util::age_in_months(&general_info.created_at)?,
         };
 
         // Done

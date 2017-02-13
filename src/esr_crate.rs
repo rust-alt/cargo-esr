@@ -9,7 +9,6 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use time;
 use hyper::client::Client;
 use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
@@ -19,6 +18,7 @@ use std::collections::HashMap;
 use std::result::Result as StdResult;
 
 use esr_errors::*;
+use esr_util;
 use esr_from::{self, EsrFrom, DefEsrFrom, EsrFromMulti};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -201,14 +201,8 @@ impl CrateInfo {
         }
 
         // All releases in the last 30.5 days
-        let curr_time = time::get_time().sec;
-
         for release in &non_yanked_releases {
-            let created_at_str = &release.created_at;
-            let created_at_tm = time::strptime(created_at_str, "%FT%TZ")?.to_timespec();
-            let created_at = created_at_tm.sec;
-
-            if (curr_time - created_at) as f64 / (3600.0 * 24.0 *30.5) <= 1.0 {
+            if esr_util::age_in_months(&release.created_at)? <= 1.0 {
                 current_versions.push(&*release.num);
             } else {
                 break;
@@ -363,20 +357,12 @@ impl CrateScoreInfo {
             .sum();
 
         // time related info
-        let curr_time = time::get_time().sec;
-        let first_activity = time::strptime(&general_info.created_at, "%FT%TZ")?.to_timespec();
-        let last_activity = time::strptime(&general_info.updated_at, "%FT%TZ")?.to_timespec();
+        let activity_span_in_months = esr_util::span_in_months(&general_info.created_at,
+                                                               &general_info.updated_at)?;
 
-        let activity_span_in_months = (last_activity.sec - first_activity.sec) as f64 /
-                                      (3600.0 * 24.0 * 30.5);
-
-        let months_since_last_release = if crate_info.non_yanked_releases().is_empty() {
-            (curr_time - first_activity.sec) as f64 / (3600.0 * 24.0 * 30.5)
-        } else {
-            let last_release = crate_info.non_yanked_releases()[0];
-            let last_release_date =
-                time::strptime(&last_release.created_at, "%FT%TZ")?.to_timespec();
-            (curr_time - last_release_date.sec) as f64 / (3600.0 * 24.0 * 30.5)
+        let months_since_last_release = match crate_info.non_yanked_releases().get(0) {
+            Some(last_release) => esr_util::age_in_months(&last_release.created_at)?,
+            None => esr_util::age_in_months(&general_info.created_at)?,
         };
 
         // Reverse dependencies
