@@ -109,9 +109,10 @@ impl CrateScores {
     }
 
     fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, Vec<EsrFormatter>) {
+        let cr_info = self.crate_full.get_info();
         let (pos, neg) = self.crate_full.get_score_tuple();
 
-        let empty_or_all_yanked_formatted = match self.crate_full.get_info().empty_or_all_yanked() {
+        let empty_or_all_yanked_formatted = match cr_info.empty_or_all_yanked() {
             true => EsrPrinter::all_yanked(),
             false => EsrFormatter::trail_only("\n "),
         };
@@ -126,8 +127,15 @@ impl CrateScores {
         let stable = self.crate_full.get_score_info().get_stable_releases();
         let yanked = releases - non_yanked;
         let non_yanked_pre = non_yanked - stable;
-        let m_s_l_r = self.crate_full.get_score_info().get_months_since_last_release();
-        let releases_formatted = EsrPrinter::releases(stable, non_yanked_pre, yanked, m_s_l_r);
+        let releases_formatted = EsrPrinter::releases(stable, non_yanked_pre, yanked);
+
+        let max_ver = Some(cr_info.get_max_version());
+        let max_ver_age = cr_info.max_version_age();
+        let max_ver_msg = EsrPrinter::release(max_ver, max_ver_age);
+
+        let last_stable_version = cr_info.last_stable_version();
+        let last_stable_version_age = cr_info.last_stable_version_age();
+        let last_stable_version_msg = EsrPrinter::release(last_stable_version, last_stable_version_age);
 
         let dependants = self.crate_full.get_score_info().get_dependants();
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
@@ -139,11 +147,12 @@ impl CrateScores {
         info_formatter.extend_from_slice(&self.score_crate());
         info_formatter.extend_from_slice(&self.score_repo());
         info_formatter.extend_from_slice(&*EsrPrinter::msg_pair_complex("Releases   ", &releases_formatted));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Max Version", &max_ver_msg));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Last Stable", &last_stable_version_msg));
         info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Dependants ", &dependants_msg));
-        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Max Version", self.crate_full.get_info().get_max_version()));
-        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("License    ", self.crate_full.get_info().get_license().unwrap_or("N/A")));
-        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Repository ", self.crate_full.get_info().get_repository().unwrap_or("N/A")));
-        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Description", self.crate_full.get_info().get_description().unwrap_or("N/A").trim()));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("License    ", cr_info.get_license().unwrap_or("N/A")));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Repository ", cr_info.get_repository().unwrap_or("N/A")));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Description", cr_info.get_description().unwrap_or("N/A").trim()));
 
         (sort_score, info_formatter)
     }

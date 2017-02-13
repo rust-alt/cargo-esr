@@ -169,6 +169,21 @@ impl CrateInfo {
             .collect()
     }
 
+    pub fn max_version_age(&self) -> Option<Result<f64>> {
+        let general_info = &self.self_info.general_info;
+        self.all_releases().iter()
+            .filter(|r| &r.num == &general_info.max_version).nth(0)
+            .map(|r| esr_util::age_in_months(&r.created_at))
+    }
+
+    pub fn last_stable_version(&self) -> Option<&str> {
+        self.stable_releases().get(0).map(|r| &*r.num)
+    }
+
+    pub fn last_stable_version_age(&self) -> Option<Result<f64>> {
+        self.stable_releases().get(0).map(|r| esr_util::age_in_months(&r.created_at))
+    }
+
     pub fn empty_or_all_yanked(&self) -> bool {
         let no_releases = self.self_info.releases.is_empty();
         let empty_release = self.get_max_version() == "0.0.0";

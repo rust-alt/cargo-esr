@@ -13,6 +13,8 @@ use term_painter::{Style, ToStyle};
 use term_painter::Attr::{Plain, Bold};
 use term_painter::Color::{Red, Cyan, Yellow, Green, Blue};
 
+use esr_errors::*;
+
 #[derive(Clone)]
 pub struct EsrFormatter {
     style: Style,
@@ -91,12 +93,18 @@ impl EsrPrinter {
         EsrFormatter::new(Red.bold(), "(empty/all yanked)", "\n ")
     }
 
-    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize, m_s_l_r: f64) -> [EsrFormatter; 4] {
+    pub fn release(ver_opt: Option<&str>, age_res_opt: Option<Result<f64>>) -> String {
+        match (ver_opt, age_res_opt) {
+            (Some(ver), Some(Ok(age))) => format!("{} (released {:.1} months ago)", ver, age),
+            _ => "N/A".into(),
+        }
+    }
+
+    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> [EsrFormatter; 3] {
         [
             EsrFormatter::new(Green.bold(), &format!("{}", stable), "+"),
             EsrFormatter::new(Yellow.bold(), &format!("{}", non_yanked_pre), "+"),
-            EsrFormatter::new(Red.bold(), &format!("{}", yanked), " ("),
-            EsrFormatter::new(Bold.to_style(), &format!("{:.1} months since last non-yanked release", m_s_l_r), ")\n "),
+            EsrFormatter::new(Red.bold(), &format!("{}", yanked), "\n "),
         ]
     }
 
