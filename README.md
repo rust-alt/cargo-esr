@@ -1,19 +1,10 @@
 # cargo-esr: Extended Search & Ranking
 
 **Or:**
- * **Extensive Swarm Review**
+ * **E**xtensive **S**warm **R**eview
 
 **Or:**
- * **Eccentric [Stdx](https://github.com/brson/stdx) Rival**
-
-
-**Or maybe:**
- * **Extended Support Release**
-   The Firefox release channel I had to move to, because Vimperator broke again
-   after a Firefox update.
-
-**Or:**
- * whatever acronym expansion that will help you remember the name of this tool ;)
+ * **E**ccentric [**S**tdx](https://github.com/brson/stdx) **R**ival
 
 ---
 
