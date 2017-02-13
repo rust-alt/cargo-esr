@@ -26,11 +26,8 @@ pub struct CrateScores {
 impl CrateScores {
     pub fn from_id(id: &str) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
-        let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
-            Some(RepoInfoWithScore::from_id(&gh_id))
-        } else {
-            None
-        };
+        let repo_full = crate_full.get_info().github_id()
+            .map(|gh_id| RepoInfoWithScore::from_id(&gh_id));
 
         Ok(Self {
             crate_full,
@@ -40,11 +37,8 @@ impl CrateScores {
 
     pub fn from_id_with_token(id: &str, gh_token: &str) -> Result<Self> {
         let crate_full = CrateInfoWithScore::from_id(id)?;
-        let repo_full = if let Some(gh_id) = crate_full.get_info().github_id() {
-            Some(RepoInfoWithScore::from_id_with_token(&gh_id, gh_token))
-        } else {
-            None
-        };
+        let repo_full =crate_full.get_info().github_id()
+            .map(|gh_id| RepoInfoWithScore::from_id_with_token(&gh_id, gh_token));
 
         Ok(Self {
             crate_full,

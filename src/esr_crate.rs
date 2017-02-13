@@ -181,8 +181,6 @@ impl CrateInfo {
         no_releases || empty_release || all_yanked
     }
 
-    // Current versions include max_ver, the last release,
-    // and all releases in the last 30.5 days
     pub fn get_current_versions(&self) -> Result<Vec<&str>> {
         let self_info = &self.self_info;
         let mut current_versions = Vec::with_capacity(8);
@@ -193,17 +191,11 @@ impl CrateInfo {
         current_versions.push(&*self_info.general_info.max_version);
 
         // Only take non-yanked releases into account
-        let non_yanked_releases: Vec<_> = self.non_yanked_releases();
+        let non_yanked_releases = self.non_yanked_releases();
 
-        // Last release
-        if let Some(release) = non_yanked_releases.get(0) {
-            current_versions.push(&*release.num);
-        }
-
-        // Last stable release
-        if let Some(release) = self.stable_releases().get(0) {
-            current_versions.push(&*release.num);
-        }
+        // last non-yanked, last stable
+        current_versions.extend(non_yanked_releases.get(0).map(|r| &*r.num).iter());
+        current_versions.extend(self.stable_releases().get(0).map(|r| &*r.num).iter());
 
         // All releases in the last 30.5 days
         for release in &non_yanked_releases {
