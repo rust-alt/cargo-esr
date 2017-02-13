@@ -200,6 +200,11 @@ impl CrateInfo {
             current_versions.push(&*release.num);
         }
 
+        // Last stable release
+        if let Some(release) = self.stable_releases().get(0) {
+            current_versions.push(&*release.num);
+        }
+
         // All releases in the last 30.5 days
         for release in &non_yanked_releases {
             if esr_util::age_in_months(&release.created_at)? <= 1.0 {

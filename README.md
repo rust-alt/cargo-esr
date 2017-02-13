@@ -330,6 +330,7 @@
 
    * max_version.
    * The version of the last non-yanked release.
+   * The version of the last stable release.
    * Any non-yanked version that has been released in the last 30.5 days.
 
 #### self.dependants_from_non_owners
