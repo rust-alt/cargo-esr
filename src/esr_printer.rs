@@ -93,6 +93,39 @@ impl EsrPrinter {
         EsrFormatter::new(Red.bold(), "(empty/all yanked)", "\n ")
     }
 
+    pub fn desc(orig_desc: &str) -> String {
+        let desc = String::from(orig_desc);
+
+        // Replace white-space with a single space
+        let mut tmp = desc.replace(&['\t', '\n'][..], " ");
+        let fixed_ws = loop {
+            let curr = tmp.replace("  ", " ");
+            if curr == tmp {
+                break curr.trim().to_string();
+            }
+            tmp = curr;
+        };
+
+        // Multi-line
+        let mut last_n = fixed_ws.rfind('\n').unwrap_or(0);
+        let mut multi_line = fixed_ws;
+
+        while multi_line.len() - last_n > 64 {
+            let new_n = multi_line[last_n+1..last_n+64].rfind(' ').unwrap_or(last_n);
+            if new_n != last_n {
+                assert!(last_n+new_n+1 < multi_line.len());
+                unsafe { multi_line.as_mut_vec()[last_n+new_n+1] = b'\0' };
+                multi_line = multi_line.replace('\0', "\n              ");
+                last_n += new_n + " Discription: ".len();
+            }
+            else {
+                break;
+            }
+        }
+
+        multi_line
+    }
+
     pub fn release(ver_opt: Option<&str>, age_res_opt: Option<Result<f64>>) -> String {
         match (ver_opt, age_res_opt) {
             (Some(ver), Some(Ok(age))) => format!("{} (released {:.1} months ago)", ver, age),

@@ -141,6 +141,8 @@ impl CrateScores {
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
         let dependants_msg = format!("{} ({} from non owners)", dependants, d_b_n_o);
 
+        let desc = EsrPrinter::desc(cr_info.get_description().unwrap_or("N/A"));
+
         let mut info_formatter = Vec::with_capacity(32);
         info_formatter.push(EsrPrinter::id(id));
         info_formatter.push(empty_or_all_yanked_formatted);
@@ -152,7 +154,7 @@ impl CrateScores {
         info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Dependants ", &dependants_msg));
         info_formatter.extend_from_slice(&EsrPrinter::msg_pair("License    ", cr_info.get_license().unwrap_or("N/A")));
         info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Repository ", cr_info.get_repository().unwrap_or("N/A")));
-        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Description", cr_info.get_description().unwrap_or("N/A").trim()));
+        info_formatter.extend_from_slice(&EsrPrinter::msg_pair("Description", &desc));
 
         (sort_score, info_formatter)
     }

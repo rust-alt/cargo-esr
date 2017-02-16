@@ -10,6 +10,7 @@
 */
 
 #![feature(inclusive_range_syntax)]
+#![feature(loop_break_value)]
 #![feature(field_init_shorthand)]
 #![feature(conservative_impl_trait)]
 
