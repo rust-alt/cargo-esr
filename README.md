@@ -8,7 +8,7 @@
 
 ---
 
-![cargo-esr screenshot](https://github.com/rust-alt/cargo-esr-misc/raw/master/cargo-esr-screenshot.png)
+![cargo-esr screenshot](https://github.com/rust-alt/cargo-esr-misc/raw/master/cargo-esr-screenshot.gif)
 
  `cargo-esr` is a proof-of-concept tool that uses the de facto
  [crates.io](https://crates.io) API to search for crates, and 
