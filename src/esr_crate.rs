@@ -285,8 +285,7 @@ impl CrateInfo {
             //CrateDependants::url_from_id(id),
         ];
 
-        // `.with_threads()` does not guarantee order. So, we
-        // use `.enumerate()` as a way to sort by index.
+        // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
         let bytes_res: Result<Vec<_>> = urls
             .into_iter()
             .enumerate()
@@ -294,15 +293,11 @@ impl CrateInfo {
             .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
             .collect();
 
-        // Check result and sort
-        let bytes = {
-            let mut bytes = bytes_res?; // unsorted
-            bytes.sort();
-            bytes
-        };
+        // Check for errors
+        let bytes = bytes_res?;
 
-        let &(_, ref bytes_self) = bytes.get(0).ok_or("impossible")?;
-        let &(_, ref bytes_owners) = bytes.get(1).ok_or("impossible")?;
+        let &(_, ref bytes_self) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
+        let &(_, ref bytes_owners) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
 
         Ok(Self {
             self_info: CrateSelfInfo::from_bytes(bytes_self)?,

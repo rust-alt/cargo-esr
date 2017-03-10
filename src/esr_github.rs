@@ -95,8 +95,7 @@ impl RepoInfo {
             RepoContributors::url_from_id_and_token(id, token),
         ];
 
-        // `.with_threads()` does not guarantee order. So, we
-        // use `.enumerate()` as a way to sort by index.
+        // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
         let bytes_res: Result<Vec<_>> = urls
             .into_iter()
             .enumerate()
@@ -104,17 +103,13 @@ impl RepoInfo {
             .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
             .collect();
 
-        // Check result and sort
-        let bytes = {
-            let mut bytes = bytes_res?; // unsorted
-            bytes.sort();
-            bytes
-        };
+        // Check for errors
+        let bytes = bytes_res?;
 
-        let &(_, ref bytes_general) = bytes.get(0).ok_or("impossible")?;
-        let &(_, ref bytes_closed_issues) = bytes.get(1).ok_or("impossible")?;
-        let &(_, ref bytes_pulls) = bytes.get(2).ok_or("impossible")?;
-        let &(_, ref bytes_contributors) = bytes.get(3).ok_or("impossible")?;
+        let &(_, ref bytes_general) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
+        let &(_, ref bytes_closed_issues) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
+        let &(_, ref bytes_pulls) = bytes.iter().find(|&&(idx,_)| idx == 2).ok_or("impossible")?;
+        let &(_, ref bytes_contributors) = bytes.iter().find(|&&(idx,_)| idx == 3).ok_or("impossible")?;
 
         Ok(Self {
             general_info: RepoGeneralInfo::from_bytes(bytes_general)?,
