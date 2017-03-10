@@ -87,6 +87,10 @@ pub struct RepoInfo {
 }
 
 impl RepoInfo {
+    pub fn from_id(_: &str) -> Result<Self> {
+        Err("Unimplemented: use  from_id_with_token()")?
+    }
+
     pub fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
         let urls = vec![
             RepoGeneralInfo::url_from_id_and_token(id, token),
