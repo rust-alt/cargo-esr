@@ -19,7 +19,7 @@ use std::result::Result as StdResult;
 
 use esr_errors::*;
 use esr_util;
-use esr_from::{self, EsrFrom, DefEsrFrom, EsrFromMulti};
+use esr_from::{EsrFrom, DefEsrFrom, EsrFromMulti};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CrateGeneralInfo {
@@ -282,17 +282,6 @@ impl CrateInfo {
     }
 
     pub fn from_id(id: &str) -> Result<Self> {
-        let client = esr_from::mk_client()?;
-
-        Ok(Self {
-            self_info: CrateSelfInfo::from_id_with_client(id, &client)?,
-            owners: CrateOwners::from_id_with_client(id, &client)?,
-            dependants: CrateDependants::from_id_with_client(id, &client)?,
-        })
-    }
-
-    // The things we do for performance
-    pub fn from_id_threaded(id: &str) -> Result<Self> {
         let urls = vec![
             CrateSelfInfo::url_from_id(id),
             CrateOwners::url_from_id(id),
@@ -525,7 +514,7 @@ pub struct CrateInfoWithScore {
 
 impl CrateInfoWithScore {
     pub fn from_id(id: &str) -> Result<Self> {
-        let crate_info = CrateInfo::from_id_threaded(id)?;
+        let crate_info = CrateInfo::from_id(id)?;
         let crate_score_info = CrateScoreInfo::from_crate_info(&crate_info)?;
         let (score_table, score_positive, score_negative) = crate_score_info.mk_score();
 

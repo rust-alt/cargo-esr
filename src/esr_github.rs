@@ -11,7 +11,7 @@
 
 use pipeliner::Pipeline;
 
-use esr_from::{self, EsrFrom, DefEsrFrom};
+use esr_from::{EsrFrom, DefEsrFrom};
 use esr_util;
 use esr_errors::*;
 
@@ -87,48 +87,14 @@ pub struct RepoInfo {
 }
 
 impl RepoInfo {
-    pub fn from_id(id: &str) -> Result<Self> {
-        let client = esr_from::mk_client()?;
-
-        let info = Self {
-            general_info: RepoGeneralInfo::from_id_with_client(id, &client)?,
-            last_100_closed_issues: RepoClosedIssues::from_id_with_client(id, &client)?,
-            last_100_pull_requests: RepoPullRequests::from_id_with_client(id, &client)?,
-            top_100_contributors: RepoContributors::from_id_with_client(id, &client)?,
-        };
-        Ok(info)
-    }
-
     pub fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
-        let client = esr_from::mk_client()?;
-
-        Ok(Self {
-            general_info: RepoGeneralInfo::from_id_with_token_and_client(id, token, &client)?,
-            last_100_closed_issues:  RepoClosedIssues::from_id_with_token_and_client(id, token, &client)?,
-            last_100_pull_requests: RepoPullRequests::from_id_with_token_and_client(id, token, &client)?,
-            top_100_contributors: RepoContributors::from_id_with_token_and_client(id, token, &client)?,
-        })
-    }
-
-    fn urls_from_id(id: &str) -> Vec<String> {
-        vec![
-            RepoGeneralInfo::url_from_id(id),
-            RepoClosedIssues::url_from_id(id),
-            RepoPullRequests::url_from_id(id),
-            RepoContributors::url_from_id(id),
-        ]
-    }
-
-    fn urls_from_id_with_token(id: &str, token: &str) -> Vec<String> {
-        vec![
+        let urls = vec![
             RepoGeneralInfo::url_from_id_and_token(id, token),
             RepoClosedIssues::url_from_id_and_token(id, token),
             RepoPullRequests::url_from_id_and_token(id, token),
             RepoContributors::url_from_id_and_token(id, token),
-        ]
-    }
+        ];
 
-    fn from_urls_threaded(urls: Vec<String>) -> Result<Self> {
         // `.with_threads()` does not guarantee order. So, we
         // use `.enumerate()` as a way to sort by index.
         let bytes_res: Result<Vec<_>> = urls
@@ -146,26 +112,16 @@ impl RepoInfo {
         };
 
         let &(_, ref bytes_general) = bytes.get(0).ok_or("impossible")?;
-        let &(_, ref bytes_issues) = bytes.get(0).ok_or("impossible")?;
-        let &(_, ref bytes_pulls) = bytes.get(0).ok_or("impossible")?;
-        let &(_, ref bytes_contributors) = bytes.get(0).ok_or("impossible")?;
+        let &(_, ref bytes_closed_issues) = bytes.get(1).ok_or("impossible")?;
+        let &(_, ref bytes_pulls) = bytes.get(2).ok_or("impossible")?;
+        let &(_, ref bytes_contributors) = bytes.get(3).ok_or("impossible")?;
 
         Ok(Self {
             general_info: RepoGeneralInfo::from_bytes(bytes_general)?,
-            last_100_closed_issues: RepoClosedIssues::from_bytes(bytes_issues)?,
+            last_100_closed_issues: RepoClosedIssues::from_bytes(bytes_closed_issues)?,
             last_100_pull_requests: RepoPullRequests::from_bytes(bytes_pulls)?,
             top_100_contributors: RepoContributors::from_bytes(bytes_contributors)?,
         })
-    }
-
-    pub fn from_id_threaded(id: &str) -> Result<Self> {
-        let urls = Self::urls_from_id(id);
-        Self::from_urls_threaded(urls)
-    }
-
-    pub fn from_id_with_token_threaded(id: &str, token: &str) -> Result<Self> {
-        let urls = Self::urls_from_id_with_token(id, token);
-        Self::from_urls_threaded(urls)
     }
 }
 
@@ -305,21 +261,8 @@ pub struct RepoInfoWithScore {
 }
 
 impl RepoInfoWithScore {
-    pub fn from_id(id: &str) -> Result<Self> {
-        let repo_info = RepoInfo::from_id_threaded(id)?;
-        let repo_score_info = RepoScoreInfo::from_repo_info(&repo_info)?;
-        let (score_table, score_positive, score_negative) = repo_score_info.mk_score();
-
-        Ok(Self {
-            repo_info,
-            repo_score_info,
-            score_positive,
-            score_negative,
-            score_table,
-        })
-    }
     pub fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
-        let repo_info = RepoInfo::from_id_with_token_threaded(id, token)?;
+        let repo_info = RepoInfo::from_id_with_token(id, token)?;
         let repo_score_info = RepoScoreInfo::from_repo_info(&repo_info)?;
         let (score_table, score_positive, score_negative) = repo_score_info.mk_score();
 
