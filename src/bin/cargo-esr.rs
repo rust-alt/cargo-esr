@@ -113,7 +113,7 @@ fn main() {
             if let Ok(search) = search_res {
                 let crates = search.get_crates();
 
-                if crates.len() == 0 {
+                if crates.is_empty() {
                     EsrPrinter::search_no_results(&search_str);
                     std::process::exit(1);
                 }

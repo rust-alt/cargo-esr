@@ -367,12 +367,12 @@ impl CrateScoreInfo {
             .dependants
             .iter()
             .filter(|dependant| {
-                current_versions.iter().find(|&ver| {
+                current_versions.iter().any(|&ver| {
                     match (Version::parse(ver), VersionReq::parse(&*dependant.req)) {
                         (Ok(ver), Ok(req)) => req.matches(&ver),
                         _ => false,
                     }
-                }).is_some()
+                })
             })
             .count();
 
