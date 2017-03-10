@@ -293,34 +293,32 @@ impl CrateInfo {
 
     // The things we do for performance
     pub fn from_id_threaded(id: &str) -> Result<Self> {
-        // We use identifiers with urls because it's not guaranteed
-        // to collect items below in order when we use `.with_threads()`
         let urls = vec![
-            ("self", CrateSelfInfo::url_from_id(id)),
-            ("owners", CrateOwners::url_from_id(id)),
+            CrateSelfInfo::url_from_id(id),
+            CrateOwners::url_from_id(id),
             // XXX: We can't add dependants because it requires multi-page.
             // Adding it will silently get results from a single page.
-            //("dependants", CrateDependants::url_from_id(id)),
+            //CrateDependants::url_from_id(id),
         ];
 
+        // `.with_threads()` does not guarantee order. So, we
+        // use `.enumerate()` as a way to sort by index.
         let bytes_res: Result<Vec<_>> = urls
             .into_iter()
+            .enumerate()
             .with_threads(2)
-            .map(|(ident, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (ident, bytes)))
+            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
             .collect();
 
-        let bytes = bytes_res?;
+        // Check result and sort
+        let bytes = {
+            let mut bytes = bytes_res?; // unsorted
+            bytes.sort();
+            bytes
+        };
 
-        let bytes_self = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "self")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
-        let bytes_owners = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "owners")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
+        let &(_, ref bytes_self) = bytes.get(0).ok_or("impossible")?;
+        let &(_, ref bytes_owners) = bytes.get(1).ok_or("impossible")?;
 
         Ok(Self {
             self_info: CrateSelfInfo::from_bytes(bytes_self)?,

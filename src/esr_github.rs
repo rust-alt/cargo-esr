@@ -110,58 +110,45 @@ impl RepoInfo {
         })
     }
 
-    fn urls_from_id(id: &str) -> Vec<(&'static str, String)> {
-        // We use identifiers with urls because it's not guaranteed
-        // to collect items below in order when we use `.with_threads()`
+    fn urls_from_id(id: &str) -> Vec<String> {
         vec![
-            ("general", RepoGeneralInfo::url_from_id(id)),
-            ("issues", RepoClosedIssues::url_from_id(id)),
-            ("pulls", RepoPullRequests::url_from_id(id)),
-            ("contributors", RepoContributors::url_from_id(id)),
+            RepoGeneralInfo::url_from_id(id),
+            RepoClosedIssues::url_from_id(id),
+            RepoPullRequests::url_from_id(id),
+            RepoContributors::url_from_id(id),
         ]
     }
 
-    fn urls_from_id_with_token(id: &str, token: &str) -> Vec<(&'static str, String)> {
-        // We use identifiers with urls because it's not guaranteed
-        // to to collect items below in order when we use `.with_threads()`
+    fn urls_from_id_with_token(id: &str, token: &str) -> Vec<String> {
         vec![
-            ("general", RepoGeneralInfo::url_from_id_and_token(id, token)),
-            ("issues", RepoClosedIssues::url_from_id_and_token(id, token)),
-            ("pulls", RepoPullRequests::url_from_id_and_token(id, token)),
-            ("contributors", RepoContributors::url_from_id_and_token(id, token)),
+            RepoGeneralInfo::url_from_id_and_token(id, token),
+            RepoClosedIssues::url_from_id_and_token(id, token),
+            RepoPullRequests::url_from_id_and_token(id, token),
+            RepoContributors::url_from_id_and_token(id, token),
         ]
     }
 
-    // The things we do for performance
-    fn from_urls_threaded(urls: Vec<(&'static str, String)>) -> Result<Self> {
+    fn from_urls_threaded(urls: Vec<String>) -> Result<Self> {
+        // `.with_threads()` does not guarantee order. So, we
+        // use `.enumerate()` as a way to sort by index.
         let bytes_res: Result<Vec<_>> = urls
             .into_iter()
+            .enumerate()
             .with_threads(4)
-            .map(|(ident, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (ident, bytes)))
+            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
             .collect();
 
-        let bytes = bytes_res?;
+        // Check result and sort
+        let bytes = {
+            let mut bytes = bytes_res?; // unsorted
+            bytes.sort();
+            bytes
+        };
 
-        let bytes_general = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "general")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
-        let bytes_issues = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "issues")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
-        let bytes_pulls = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "pulls")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
-        let bytes_contributors = bytes
-            .iter()
-            .find(|&&(ident, _)| ident == "contributors")
-            .map(|&(_, ref bytes)| bytes)
-            .ok_or("impossible")?;
+        let &(_, ref bytes_general) = bytes.get(0).ok_or("impossible")?;
+        let &(_, ref bytes_issues) = bytes.get(0).ok_or("impossible")?;
+        let &(_, ref bytes_pulls) = bytes.get(0).ok_or("impossible")?;
+        let &(_, ref bytes_contributors) = bytes.get(0).ok_or("impossible")?;
 
         Ok(Self {
             general_info: RepoGeneralInfo::from_bytes(bytes_general)?,
