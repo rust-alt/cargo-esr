@@ -41,10 +41,10 @@ pub fn mk_client() -> Result<Client> {
 pub trait EsrFromMulti: EsrFrom + Send + 'static {
     type Inner: Clone;
 
-    fn from_url_multi_with_init_client(url: &str, client: &Client, multi_page: bool) -> Result<Self> {
+    fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
         let url = url.to_string();
 
-        let mut initial_self = Self::from_url_with_client(&url, client)?;
+        let mut initial_self = Self::from_url(&url)?;
         let total = initial_self.total_from_meta()?;
 
         // per_page=100 is the maximum number allowed.
@@ -72,11 +72,6 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
         Ok(initial_self)
     }
 
-    fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
-        let client = mk_client()?;
-        Self::from_url_multi_with_init_client(url, &client, multi_page)
-    }
-
     fn total_from_meta(&self) -> Result<usize> {
         let num = self.get_meta().get("total").ok_or("total num of dependants missing")?;
         Ok(*num)
@@ -102,7 +97,8 @@ pub trait EsrFrom: Sized + Deserialize {
         }
     }
 
-    fn bytes_from_url_with_client(url: &str, client: &Client) -> Result<Vec<u8>> {
+    fn bytes_from_url(url: &str) -> Result<Vec<u8>> {
+        let client = mk_client()?;
         // Creating an outgoing request.
         let mut resp = client.get(url)
             .header(UserAgent("cargo-esr/0.1".into()))
@@ -112,11 +108,6 @@ pub trait EsrFrom: Sized + Deserialize {
         let mut buf = Vec::with_capacity(256 * 1024);
         resp.read_to_end(&mut buf)?;
         Ok(buf)
-    }
-
-    fn bytes_from_url(url: &str) -> Result<Vec<u8>> {
-        let client = mk_client()?;
-        Self::bytes_from_url_with_client(url, &client)
     }
 
     fn bytes_from_id(id: &str) -> Result<Vec<u8>> {
@@ -133,14 +124,9 @@ pub trait EsrFrom: Sized + Deserialize {
         Ok(info)
     }
 
-    fn from_url_with_client(url: &str, client: &Client) -> Result<Self> {
-        let bytes = Self::bytes_from_url_with_client(url, client)?;
-        Self::from_bytes(&*bytes)
-    }
-
     fn from_url(url: &str) -> Result<Self> {
-        let client = mk_client()?;
-        Self::from_url_with_client(url, &client)
+        let bytes = Self::bytes_from_url(url)?;
+        Self::from_bytes(&*bytes)
     }
 
     fn from_id(id: &str) -> Result<Self> {
@@ -149,14 +135,6 @@ pub trait EsrFrom: Sized + Deserialize {
 
     fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
         Self::from_url(&Self::url_from_id_and_token(id, token))
-    }
-
-    fn from_id_with_client(id: &str, client: &Client) -> Result<Self> {
-        Self::from_url_with_client(&Self::url_from_id(id), client)
-    }
-
-    fn from_id_with_token_and_client(id: &str, token: &str, client: &Client) -> Result<Self> {
-        Self::from_url_with_client(&Self::url_from_id_and_token(id, token), client)
     }
 }
 

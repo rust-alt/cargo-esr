@@ -9,7 +9,6 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use hyper::client::Client;
 use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
 use regex::{self, Regex};
@@ -121,10 +120,6 @@ impl EsrFrom for CrateDependants {
 
     fn from_id(id: &str) -> Result<Self> {
         EsrFromMulti::from_url_multi(&Self::url_from_id(id), true)
-    }
-
-    fn from_id_with_client(id: &str, client: &Client) -> Result<Self> {
-        EsrFromMulti::from_url_multi_with_init_client(&Self::url_from_id(id), client, true)
     }
 }
 
@@ -576,10 +571,6 @@ impl EsrFrom for CrateSearch {
 
     fn from_id(id: &str) -> Result<Self> {
         EsrFromMulti::from_url_multi(&Self::url_from_id(id), true)
-    }
-
-    fn from_id_with_client(id: &str, client: &Client) -> Result<Self> {
-        EsrFromMulti::from_url_multi_with_init_client(&Self::url_from_id(id), client, true)
     }
 }
 
