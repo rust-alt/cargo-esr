@@ -100,15 +100,12 @@ impl RepoInfo {
         ];
 
         // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
-        let bytes_res: Result<Vec<_>> = urls
+        let bytes = urls
             .into_iter()
             .enumerate()
             .with_threads(4)
             .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
-            .collect();
-
-        // Check for errors
-        let bytes = bytes_res?;
+            .collect::<Result<Vec<_>>>()?;
 
         let &(_, ref bytes_general) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
         let &(_, ref bytes_closed_issues) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
