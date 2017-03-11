@@ -286,15 +286,17 @@ impl CrateInfo {
         ];
 
         // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
-        let bytes_res: Result<Vec<_>> = urls
+        let bytes_iter_res = urls
             .into_iter()
             .enumerate()
             .with_threads(2)
-            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
-            .collect();
+            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)));
 
-        // Check for errors
-        let bytes = bytes_res?;
+        // We do this before collect()ing the pipe-lined iter to save time
+        let dependants = CrateDependants::from_id(id)?;
+
+        // collect() and check for errors
+        let bytes = bytes_iter_res.collect::<Result<Vec<_>>>()?;
 
         let &(_, ref bytes_self) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
         let &(_, ref bytes_owners) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
@@ -302,7 +304,7 @@ impl CrateInfo {
         Ok(Self {
             self_info: CrateSelfInfo::from_bytes(bytes_self)?,
             owners: CrateOwners::from_bytes(bytes_owners)?,
-            dependants: CrateDependants::from_id(id)?,
+            dependants,
         })
     }
 }
