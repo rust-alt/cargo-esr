@@ -162,8 +162,8 @@ impl EsrPrinter {
     }
 
     pub fn score_details(msg: &str, table: &[(String, String, String)]) -> Vec<EsrFormatter> {
-        let msg = format!("{: ^49}", msg);
-        let frame = format!("{: ^49}", "-".repeat(msg.len()));
+        let msg = format!("{: ^44}", msg);
+        let frame = format!("{: ^44}", "-".repeat(msg.len()));
 
         let mut score_formatted = Vec::with_capacity(4096);
         score_formatted.push(EsrFormatter::new(Cyan.bold(), &*frame, "\n"));
