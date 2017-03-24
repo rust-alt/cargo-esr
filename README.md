@@ -236,33 +236,33 @@
  -------------------------------------------------
                 Crate Score Details
  -------------------------------------------------
-                   self.has_desc                   |     1 * 5.000      | +5.000
-                 self.has_license                  |     1 * 5.000      | +5.000
-                   self.has_docs                   |     1 * 15.000     | +15.000
-      self.activity_span_in_months.powf(0.5)       |   5.137 * 6.000    | +30.824
-                   self.releases                   |     22 * 0.750     | +16.500
-             self.non_yanked_releases              |     22 * 0.750     | +16.500
-   self.last_2_non_yanked_releases_downloads / 2   |    3855 * 0.001    | +3.855
-                  self.dependants                  |     85 * 0.500     | +42.500
-               self.hard_dependants                |     82 * 0.750     | +61.500
-        self.dependants_on_current_versions        |     49 * 0.750     | +36.750
-          self.dependants_from_non_owners          |     75 * 2.500     | +187.500
-     self.months_since_last_release.powf(1.5)      |   0.356 * -2.000   | -0.712
-             self.empty_or_all_yanked              |   0 * -5000.000    | 0.000
+                   has_desc                   |     1 * 5.000      | +5.000
+                 has_license                  |     1 * 5.000      | +5.000
+                   has_docs                   |     1 * 15.000     | +15.000
+      activity_span_in_months.powf(0.5)       |   5.137 * 6.000    | +30.824
+                   releases                   |     22 * 0.750     | +16.500
+             non_yanked_releases              |     22 * 0.750     | +16.500
+   last_2_non_yanked_releases_downloads / 2   |    3855 * 0.001    | +3.855
+                  dependants                  |     85 * 0.500     | +42.500
+               hard_dependants                |     82 * 0.750     | +61.500
+        dependants_on_current_versions        |     49 * 0.750     | +36.750
+          dependants_from_non_owners          |     75 * 2.500     | +187.500
+     months_since_last_release.powf(1.5)      |   0.356 * -2.000   | -0.712
+             empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
  Crate Score: 420.217 (+420.929 / -0.712)
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
-                 self.subscribers                  |    112 * 0.500     | +56.000
-            self.contributors_up_to_100            |     77 * 3.000     | +231.000
-      self.commits_from_upto_100_contributors      |    477 * 0.100     | +47.700
-          self.secondary_contribution_pct          |     45 * 5.000     | +225.000
-        self.push_span_in_months.powf(0.5)         |   5.444 * 5.000    | +27.220
-       self.merged_pull_requests_in_last_100       |     28 * 2.000     | +56.000
-    self.months_since_last_pr_merged.powf(1.5)     |   0.356 * -1.000   | -0.356
-   self.months_since_last_issue_closed.powf(1.5)   |   0.023 * -1.000   | -0.023
-       self.months_since_last_push.powf(1.5)       |   0.000 * -4.000   | -0.000
+                 subscribers                  |    112 * 0.500     | +56.000
+            contributors_up_to_100            |     77 * 3.000     | +231.000
+      commits_from_upto_100_contributors      |    477 * 0.100     | +47.700
+          secondary_contribution_pct          |     45 * 5.000     | +225.000
+        push_span_in_months.powf(0.5)         |   5.444 * 5.000    | +27.220
+       merged_pull_requests_in_last_100       |     28 * 2.000     | +56.000
+    months_since_last_pr_merged.powf(1.5)     |   0.356 * -1.000   | -0.356
+   months_since_last_issue_closed.powf(1.5)   |   0.023 * -1.000   | -0.023
+       months_since_last_push.powf(1.5)       |   0.000 * -4.000   | -0.000
  
  Repo Score : 642.542 (+642.920 / -0.379)
 
@@ -278,44 +278,44 @@
 
 ### Crate Score
 
-#### self.has_desc
+#### has_desc
    The crate has a description.
 
-#### self.has_license
+#### has_license
    The crate has a license.
 
-#### self.has_docs
+#### has_docs
    The crate has documentation.
 
    That's just a URL the author sets. It doesn't speak to
    the quality or the completeness of the documentation.
 
-#### self.has_self.activity_span_in_months.powf(0.5)
+#### has_activity_span_in_months.powf(0.5)
    The span from crate's creation date on [crates.io](https://crates.io)
    until the last update.
 
    Non-linear because we want to limit the reward as crates grow older.
 
-#### self.releases
+#### releases
    The number of releases the crate has.
 
-#### self.non_yanked_releases
+#### non_yanked_releases
    The number of non-yanked releases the crate has.
 
-#### self.stable_releases
+#### stable_releases
    The number of non-yanked non-pre releases the crate has.
 
-#### self.last_2_non_yanked_releases_downloads / 2
+#### last_2_non_yanked_releases_downloads / 2
    An estimate for the current number of downloads per release.
    This factor has the weakest weight (0.001) among all others.
 
-#### self.dependants
+#### dependants
    The number of dependants (a.k.a. reverse dependencies).
 
-#### self.hard_dependants
+#### hard_dependants
    The number of dependants that non-optionally depend on this crate in their default feature.
 
-#### self.dependants_on_current_versions
+#### dependants_on_current_versions
    The number of dependants that depend on a version of this crate that
    is SemVer-compatible with one or more of the following:
 
@@ -324,7 +324,7 @@
    * The version of the last stable release.
    * Any non-yanked version that has been released in the last 30.5 days.
 
-#### self.dependants_from_non_owners
+#### dependants_from_non_owners
    The number of dependants from other authors than the authors of this
    crate.
 
@@ -337,14 +337,14 @@
    one popular , but arguably deprecated, crate to another. It's
    the anti-anecdote factor, of sorts.
 
-#### self.empty_or_all_yanked
+#### empty_or_all_yanked
    Whether the crate has no releases, or max_version is `0.0.0`, or all releases
    of the crate have been yanked.
 
    This is a strong negative factor (-5000.0), with an additional indicator in
    the search results displayed.
 
-#### self.months_since_last_release.powf(1.5)
+#### months_since_last_release.powf(1.5)
    The number of months (floating point) since the last non-yanked version
    released.
 
@@ -354,33 +354,33 @@
 
 
 ### Repo Score
-#### self.subscribers
+#### subscribers
    The number of subscribers/watchers of the repo.
 
-#### self.contributors_up_to_100
+#### contributors_up_to_100
    The number of contributors to the repo. Up to a maximum of a 100.
 
-#### self.commits_from_upto_100_contributors
+#### commits_from_upto_100_contributors
    The number of commits pushed to the repo, from up to 100 contributors.
 
-#### self.secondary_contribution_pct
+#### secondary_contribution_pct
    For repositories with a 100 or more commits. This represents the percentage
    of commits from all contributors but the top one.
 
    This, with the number of contributors, provide an alternative to bus/truck
    factor calculations, from readily available data, obtained via GitHub's API.
 
-#### self.push_span_in_months.powf(0.5)
+#### push_span_in_months.powf(0.5)
    The span in months (floating point) from the repository's creation, to
    the last push.
 
    Pushes to non-default branches are taken into account.
 
-#### self.merged_pull_requests_in_last_100
+#### merged_pull_requests_in_last_100
    The number of pull requests merged in the last 100 PRs sent to the repository.
    This will be the number of all PRs merged in smaller repositories.
 
-#### self.months_since_last_pr_merged.powf(1.5)
+#### months_since_last_pr_merged.powf(1.5)
    The number of months (floating point) since the last pull request merged.
    This will be the number of months since the repository was created, if
    it never had a PR merged.
@@ -389,7 +389,7 @@
 
    Non-linear because the longer the repository is inactive, the more we want to punish it.
 
-#### self.months_since_last_issue_closed.powf(1.5)
+#### months_since_last_issue_closed.powf(1.5)
    The number of months (floating point) since the last issue closed.
    This will be the number of months since the repository was created, if
    it never had an issue closed.
@@ -398,7 +398,7 @@
 
    Non-linear because the longer the repository is inactive, the more we want to punish it.
 
-#### self.months_since_last_push.powf(1.5)
+#### months_since_last_push.powf(1.5)
    The number of months (floating point) since the last push to the repository.
    Pushes to non-default branches are taken into account.
 
