@@ -177,8 +177,8 @@ impl EsrPrinter {
                 score_formatted.push(EsrFormatter::new(Red.bold(), &*line.2, "\n"));
             } else {
                 score_formatted.push(EsrFormatter::new(Yellow.bold(), &*line.0, " | "));
-                score_formatted.push(EsrFormatter::new(Red.bold(), &*line.1, " | "));
-                score_formatted.push(EsrFormatter::new(Red.bold(), &*("+".to_string() + &*line.2), "\n"));
+                score_formatted.push(EsrFormatter::new(Green.bold(), &*line.1, " | "));
+                score_formatted.push(EsrFormatter::new(Green.bold(), &*("+".to_string() + &*line.2), "\n"));
             }
         }
         score_formatted
