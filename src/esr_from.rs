@@ -10,7 +10,7 @@
 */
 
 use serde_json;
-use serde::Deserialize;
+use serde::de::DeserializeOwned;
 
 use hyper_native_tls::NativeTlsClient;
 use hyper::client::{Client, RedirectPolicy};
@@ -82,7 +82,7 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
     fn get_inner_mut(&mut self) -> &mut Vec<Self::Inner>;
 }
 
-pub trait EsrFrom: Sized + Deserialize {
+pub trait EsrFrom: Sized + DeserializeOwned {
     // url=id by default
     fn url_from_id(id: &str) -> String {
         String::from(id)
