@@ -64,6 +64,9 @@ impl CrateScores {
     }
 
     pub fn print_detailed_scores(&self, formatted: bool) {
+        let id = self.crate_full.get_info().get_id();
+        EsrFormatter::print_grp(&self.info_pair(id, false).1, formatted);
+
         let table = self.crate_full.get_score_table();
         EsrFormatter::print_grp(&EsrPrinter::score_details("Crate Score Details", table), formatted);
         EsrFormatter::print_grp(&self.score_crate(), formatted);
