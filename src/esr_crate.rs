@@ -546,6 +546,7 @@ pub struct CrateSearch {
 
 impl EsrFromMulti for CrateSearch {
     type Inner = CrateGeneralInfo;
+    type Inner2 = ();
 
     fn get_meta(&self) -> &HashMap<String, usize> {
         &self.meta
