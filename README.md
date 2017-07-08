@@ -1,12 +1,5 @@
 # cargo-esr: Extended Search & Ranking
 
-**Or:**
- * **E**xtensive **S**warm **R**eview
-
-**Or:**
- * **E**ccentric [**S**tdx](https://github.com/brson/stdx) **R**ival
-
----
 
 ![cargo-esr screenshot](https://github.com/rust-alt/cargo-esr-misc/raw/master/cargo-esr-screenshot.gif)
 
@@ -18,13 +11,14 @@
  when sorting search results. Only GitHub repositories are supported.
 
  Score contributing factors, and the chosen weight for them is completely
- arbitrary. And thus shouldn't be taken too seriously. Neither should the **exact scores**
- be relied on for evaluation (more on that below in the **Caveats** section).
+ arbitrary. And thus shouldn't be taken too seriously. Neither should
+ the **exact scores** be relied on for evaluation (more on that below in
+ the **Caveats** section).
 
- The idea is to try to narrow down the possibilities from, let's say 23, to
- 2-3 solid choices. Reducing the need for constantly engaging with
- the *official community*. And providing a more objective view into
- the swarm, and its current state of affairs.
+ The idea is to try to narrow down the possibilities to 2-3 solid choices.
+ Reducing the need for constantly engaging with the *official community*.
+ And providing a more objective view into the swarm, and its current state
+ of affairs.
 
 ## Contact
 
@@ -48,30 +42,6 @@
 
  ```
  $ cargo esr -h
- cargo-esr 0.2
- cargo's Extended Search & Ranking tool
- 
- USAGE:
-     cargo-esr [FLAGS] [OPTIONS] <--search <search>...|--score <score>>
- 
- FLAGS:
-     -o, --crate-only       Get crate info only, without repository scores
-     -h, --help             Prints help information
-     -n, --no-color         Force disable colors and all formattings
-     -p, --sort-positive    Sort by positive scores only. Without taking inactivity
-                            into account
-     -V, --version          Prints version information
- 
- OPTIONS:
-     -g, --gh-token <CARGO_ESR_GH_TOKEN>
-             Set GitHub Access Token (https://github.com/settings/tokens/new)
-     -L, --results-limit <results-limit>
-             Limit the number of top-ranking results shown (default: 10, valid: 3-30)
-     -l, --search-limit <search-limit>
-             Limit the number of searched & ranked items (default: 30, valid: 3-30)
-     -c, --score <score>                    Get detailed score of a crate
-     -s, --search <search>...
-             Search crates.io and return results sorted by score
  ```
 
  > Getting repository information requires passing
@@ -82,189 +52,57 @@
  >
  > Alternatively, passing `-o` will skip getting repository scores.
  >
- > All below examples assume `CARGO_ESR_GH_TOKEN` is set.
-
- You can either search (`-s/--search`) `crates.io`. And get results sorted by **crate score**
- in descending order. Or you can get the score details of a crate (`-c/--score`).
-
- > **Note:** The output in a real terminal emulator is well-formatted with colors.
-
- Example search:
-
-
- ```
- $ cargo esr -s async
- (1) futures
-   Crate Score: 464.403 (+464.750 / -0.347)
-   Repo Score : 659.776 (+659.779 / -0.003)
-   Releases   : 10+1 (0.3 months since last non-yanked release)
-   Dependants : 98 (85 from non owners)
-   Max Version: 0.1.10
-   License    : MIT/Apache-2.0
-   Repository : https://github.com/alexcrichton/futures-rs
-   Description: An implementation of futures and streams featuring zero allocations,
- composability, and iterator-like interfaces.
- 
- (2) mio
-   Crate Score: 420.217 (+420.929 / -0.712)
-   Repo Score : 642.542 (+642.920 / -0.379)
-   Releases   : 22+0 (0.5 months since last non-yanked release)
-   Dependants : 85 (75 from non owners)
-   Max Version: 0.6.4
-   License    : MIT
-   Repository : https://github.com/carllerche/mio
-   Description: Lightweight non-blocking IO
- 
- (3) handy_async
-   Crate Score: 47.065 (+47.321 / -0.256)
-   Repo Score : 7.975 (+20.318 / -12.344)
-   Releases   : 7+0 (0.3 months since last non-yanked release)
-   Dependants : 2 (0 from non owners)
-   Max Version: 0.2.6
-   License    : MIT
-   Repository : https://github.com/sile/handy_async
-   Description: A handy library for describing asynchronous code declaratively
- 
- (4) pg_async
-   Crate Score: 46.377 (+46.627 / -0.250)
-   Repo Score : 7.992 (+15.288 / -7.296)
-   Releases   : 10+0 (0.3 months since last non-yanked release)
-   Dependants : 0 (0 from non owners)
-   Max Version: 0.4.1
-   License    : MIT
-   Repository : https://github.com/ArtemGr/pg_async.rs
-   Description: Asynchronous, HA (master-master) PostgreSQL driver on top of libpq
- 
- (5) mioco
-   Crate Score: 46.634 (+73.247 / -26.613)
-   Repo Score : 268.212 (+307.071 / -38.859)
-   Releases   : 13+0 (5.6 months since last non-yanked release)
-   Dependants : 2 (1 from non owners)
-   Max Version: 0.8.1
-   License    : MPL-2.0
-   Repository : https://github.com/dpc/mioco
-   Description: Scalable, asynchronous IO coroutine-based handling (aka MIO COroutines).
- 
- (6) capnp-futures
-   Crate Score: 45.649 (+45.922 / -0.273)
-   Repo Score : 6.415 (+19.620 / -13.205)
-   Releases   : 4+0 (0.3 months since last non-yanked release)
-   Dependants : 1 (0 from non owners)
-   Max Version: 0.1.1
-   License    : MIT
-   Repository : https://github.com/dwrensha/capnp-futures-rs
-   Description: async serialization for Cap'n Proto messages
- 
- (7) fibers
-   Crate Score: 41.799 (+41.855 / -0.056)
-   Repo Score : 8.150 (+15.063 / -6.913)
-   Releases   : 4+0 (0.1 months since last non-yanked release)
-   Dependants : 1 (0 from non owners)
-   Max Version: 0.1.3
-   License    : MIT
-   Repository : https://github.com/dwango/fibers-rs
-   Description: A Rust library to execute a number of lightweight asynchronous tasks (a.k.a, fibers) based on futures and mio
- 
- (8) mysql_async
-   Crate Score: 40.121 (+40.709 / -0.589)
-   Repo Score : 22.418 (+28.740 / -6.322)
-   Releases   : 4+0 (0.4 months since last non-yanked release)
-   Dependants : 0 (0 from non owners)
-   Max Version: 0.5.0
-   License    : MIT/Apache-2.0
-   Repository : https://github.com/blackbeam/mysql_async
-   Description: Tokio based asynchronous MySql client library.
- 
- (9) couchbase
-   Crate Score: 29.450 (+29.824 / -0.374)
-   Repo Score : 34.964 (+36.477 / -1.514)
-   Releases   : 2+0 (0.3 months since last non-yanked release)
-   Dependants : 0 (0 from non owners)
-   Max Version: 0.1.1
-   License    : Apache-2.0
-   Repository : https://github.com/couchbaselabs/couchbase-rs
-   Description: The Couchbase Rust SDK
- 
- (10) amy
-   Crate Score: 28.152 (+45.840 / -17.688)
-   Repo Score : -12.900 (+40.168 / -53.068)
-   Releases   : 15+0 (4.3 months since last non-yanked release)
-   Dependants : 1 (0 from non owners)
-   Max Version: 0.6.0
-   License    : Apache-2.0
-   Repository : https://github.com/andrewjstone/amy
-   Description: Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
-
- ```
-
- The default number of searched and ranked crates is 30. You can use
- `-l/--search-limit` to change this default.
-
- The default number of results shown is 10. You can use `-L/--results-limit`
- to change this default.
-
- Use `--search-limit` with a lower value if the top results shown are irrelevant.
-
-
- Passing `-o/--crate-only` will skip getting repository scores, without affecting
- the order of the results. You will get results faster. And you won't be required
- to use a GitHub access token.
-
- Now, compare the results we got above here with the results from `cargo search`, which match
- the results [you get on crates.io](https://crates.io/search?q=async+IO):
-
- ```
- $ cargo search async IO
- handy_async (0.2.5)     A handy library for describing asynchronous code declaratively
- handy_io (0.1.2)        A handy pattern and futures based asynchronous I/O library
- event_rust (0.1.1)      Lightweight non-blocking IO support windows and linux
- tmp_mio (0.5.2)         Temporary fork of the mio crate with windows bug fix
- gio-2-0-sys (0.46.4)    Import crate for Gio
- mio (0.6.4)             Lightweight non-blocking IO
- nio (0.0.1)             Just a stub for upcoming library
- tokio-proto (0.1.0)     A network application framework for rapid development and highly scalable production deployments of clients and servers.
- td_revent (0.1.5)       Event library for Rust, Async IO similar to libevent
- fibers (0.1.1)          A Rust library to execute a number of lightweight asynchronous tasks (a.k.a, fibers) based on futures and mio
- ... and 19 crates more (use --limit N to see more)
- ```
 
 ## Detailed Scoring Criteria
 
  Let's take `mio`'s score as an example:
  ```
  $ cargo esr -c mio
- -------------------------------------------------
-                Crate Score Details
- -------------------------------------------------
-                   has_desc                   |     1 * 5.000      | +5.000
-                 has_license                  |     1 * 5.000      | +5.000
-                   has_docs                   |     1 * 15.000     | +15.000
-      activity_span_in_months.powf(0.5)       |   5.137 * 6.000    | +30.824
-                   releases                   |     22 * 0.750     | +16.500
-             non_yanked_releases              |     22 * 0.750     | +16.500
-   last_2_non_yanked_releases_downloads / 2   |    3855 * 0.001    | +3.855
-                  dependants                  |     85 * 0.500     | +42.500
-               hard_dependants                |     82 * 0.750     | +61.500
-        dependants_on_current_versions        |     49 * 0.750     | +36.750
-          dependants_from_non_owners          |     75 * 2.500     | +187.500
-     months_since_last_release.powf(1.5)      |   0.356 * -2.000   | -0.712
-             empty_or_all_yanked              |   0 * -5000.000    | 0.000
+ mio
+  Crate Score: 490.418 (+492.476 / -2.058)
+  Repo Score : 718.721 (+720.040 / -1.318)
+  Releases   : 27+0+0
+  Max Version: 0.6.9 (released 1.0 months ago)
+  Last Stable: 0.6.9 (released 1.0 months ago)
+  Dependants : 94 (84 from non owners)
+  License    : MIT
+  Repository : https://github.com/carllerche/mio
+  Description: Lightweight non-blocking IO
+
+  --------------------------------------------
+  Crate Score Details
+  --------------------------------------------
+  has_desc                   |     1 * 5.000      | +5.000
+  has_license                  |     1 * 5.000      | +5.000
+  has_docs                   |     1 * 15.000     | +15.000
+  activity_span_in_months.powf(0.5)       |   5.548 * 6.000    | +33.289
+  releases                   |     27 * 0.500     | +13.500
+  non_yanked_releases              |     27 * 0.500     | +13.500
+  stable_releases                |     27 * 0.500     | +13.500
+  last_2_non_yanked_releases_downloads / 2   |   19687 * 0.001    | +19.687
+  dependants                  |     94 * 0.500     | +47.000
+  hard_dependants                |     91 * 0.750     | +68.250
+  dependants_on_current_versions        |     65 * 0.750     | +48.750
+  dependants_from_non_owners          |     84 * 2.500     | +210.000
+  months_since_last_release.powf(1.5)      |   1.029 * -2.000   | -2.058
+  empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
- Crate Score: 420.217 (+420.929 / -0.712)
- -------------------------------------------------
-                Repo Score Details
- -------------------------------------------------
-                 subscribers                  |    112 * 0.500     | +56.000
-            contributors_up_to_100            |     77 * 3.000     | +231.000
-      commits_from_upto_100_contributors      |    477 * 0.100     | +47.700
-          secondary_contribution_pct          |     45 * 5.000     | +225.000
-        push_span_in_months.powf(0.5)         |   5.444 * 5.000    | +27.220
-       merged_pull_requests_in_last_100       |     28 * 2.000     | +56.000
-    months_since_last_pr_merged.powf(1.5)     |   0.356 * -1.000   | -0.356
-   months_since_last_issue_closed.powf(1.5)   |   0.023 * -1.000   | -0.023
-       months_since_last_push.powf(1.5)       |   0.000 * -4.000   | -0.000
+  Crate Score: 490.418 (+492.476 / -2.058)
  
- Repo Score : 642.542 (+642.920 / -0.379)
+  --------------------------------------------
+  Repo Score Details
+  --------------------------------------------
+  subscribers                  |    112 * 0.500     | +56.000
+  contributors_up_to_100            |     87 * 3.000     | +261.000
+  commits_from_upto_100_contributors      |    548 * 0.100     | +54.800
+  secondary_contribution_pct          |     45 * 5.000     | +225.000
+  push_span_in_months.powf(0.5)         |   5.848 * 5.000    | +29.240
+  merged_pull_requests_in_last_100       |     47 * 2.000     | +94.000
+  months_since_last_pr_merged.powf(1.5)     |   0.249 * -1.000   | -0.249
+  months_since_last_issue_closed.powf(1.5)   |   0.249 * -1.000   | -0.249
+  months_since_last_push.powf(1.5)       |   0.205 * -4.000   | -0.820
+ 
+  Repo Score : 718.721 (+720.040 / -1.318)
 
  ```
 
@@ -406,168 +244,6 @@
 
    Non-linear because the longer the repository is inactive, the more we want to punish it.
 
-## More Examples
-
- > The searches are done with the default limit(10). Only 3 results are shown for
- > brevity.
-
-### epoll
- 
-   ```
-   $ cargo esr -s epoll
-   (1) mio
-     Crate Score: 436.043 (+436.077 / -0.034)
-     Repo Score : 653.686 (+653.719 / -0.034)
-     Dependants : 81 (71 from non owners)
-     Releases   : 22 (0.1 months without a release)
-     Max Version: 0.6.4
-     License    : MIT
-     Repository : https://github.com/carllerche/mio
-     Description: Lightweight non-blocking IO
-   
-   (2) epoll
-     Crate Score: 111.256 (+113.728 / -2.472)
-     Repo Score : -2.619 (+36.206 / -38.826)
-     Dependants : 0 (0 from non owners)
-     Releases   : 16 (1.2 months without a release)
-     Max Version: 2.1.0
-     License    : MPL-2.0
-     Repository : https://github.com/nathansizemore/epoll
-     Description: Safe epoll interface.
-   
-   (3) amy
-     Crate Score: 59.696 (+74.748 / -15.052)
-     Repo Score : -4.991 (+40.168 / -45.160)
-     Dependants : 1 (0 from non owners)
-     Releases   : 15 (3.8 months without a release)
-     Max Version: 0.6.0
-     License    : Apache-2.0
-     Repository : https://github.com/andrewjstone/amy
-     Description: Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
-   ```
-  
-   vs.
-  
-   ```
-   $ cargo search epoll
-   epoll (2.1.0)         Safe epoll interface.
-   hydrogen (0.1.4)      Multithreaded Linux TCP socket server using epoll.
-   amy (0.6.0)           Polling and Registration abstractions around kqueue and epoll for multithreaded async network programming
-   reactor (0.1.4)       A wrapper around mio which allows easily composable, but still fast, evented components
-   xcore (0.1.3)         A simple epoll based TCP server framework
-   cupi (0.1.0)          Cuprum Pi is a GPIO access library written on Rust for the Raspberry Pi board.
-   event_rust (0.1.1)    Lightweight non-blocking IO support windows and linux
-   gjio (0.1.3)          Asynchronous input and output.
-   mio (0.6.4)           Lightweight non-blocking IO
-   td_revent (0.1.5)     Event library for Rust, Async IO similar to libevent
-   ... and 1 crates more (use --limit N to see more)
-   ```
- 
-### getopt
-
-   ```
-   $ cargo esr -s getopt
-   (1) clap
-     Crate Score: 2217.872 (+2219.003 / -1.131)
-     Repo Score : 762.711 (+762.876 / -0.166)
-     Dependants : 414 (408 from non owners)
-     Releases   : 167 (0.7 months without a release)
-     Max Version: 2.20.0
-     License    : MIT
-     Repository : https://github.com/kbknapp/clap-rs.git
-     Description: A simple to use, efficient, and full featured  Command Line Argument Parser
-   
-   (2) getopts
-     Crate Score: 588.292 (+727.888 / -139.596)
-     Repo Score : 363.545 (+364.103 / -0.557)
-     Dependants : 117 (117 from non owners)
-     Releases   : 20 (17.0 months without a release)
-     Max Version: 0.2.14
-     License    : MIT/Apache-2.0
-     Repository : https://github.com/rust-lang/getopts
-     Description: getopts-like option parsing.
-   
-   (3) cargo-edit
-     Crate Score: 89.636 (+90.882 / -1.246)
-     Repo Score : 472.979 (+473.362 / -0.383)
-     Dependants : 2 (2 from non owners)
-     Releases   : 7 (0.7 months without a release)
-     Max Version: 0.1.6
-     License    : Apache-2.0/MIT
-     Repository : https://github.com/killercup/cargo-edit
-     Description: This extends Cargo to allow you to add and list dependencies by reading/writing to your `Cargo.toml` file from the command line. It contains `cargo add`, `cargo rm`, and `cargo list`.
-   ```
-
-   vs.
-
-   ```
-   $cargo search getopt
-   getopts (0.2.14)      getopts-like option parsing.
-   clap (2.20.0)         A simple to use, efficient, and full featured  Command Line Argument Parser
-   args (2.0.4)          An argument parsing and validation library designed to take some of tediousness out of the general 'getopts' crate.
-   pgetopts (0.1.2)      getopts-like option parsing, a fork of the Rust team's getopts.
-   pirate (1.0.0)        A simple arrrguments parser
-   rfmt (0.1.0)          Another Rust source code formatter.
-   tomllib (0.1.2)       A format-preserving TOML file parser and manipulator
-   cargo-edit (0.1.6)    This extends Cargo to allow you to add and list dependencies by reading/writing to your `Cargo.toml` file from the command line…
-   du (0.1.1)            Implementing du -sb in order to learn Rust
-   glfw-sys (3.2.1)      An Open Source, multi-platform library for creating windows with OpenGL contexts and receiving input and events
-   ... and 2 crates more (use --limit N to see more)
-   ```
-
-### deserialize
-
-   ```
-   $ cargo esr -s deserialize
-   (1) serde
-     Crate Score: 2741.367 (+2741.379 / -0.012)
-     Repo Score : 787.832 (+787.862 / -0.031)
-     Dependants : 627 (621 from non owners)
-     Releases   : 71 (0.0 months without a release)
-     Max Version: 0.9.1
-     License    : MIT/Apache-2.0
-     Repository : https://github.com/serde-rs/serde
-     Description: A generic serialization/deserialization framework
-   
-   (2) serde_json
-     Crate Score: 2367.141 (+2367.147 / -0.006)
-     Repo Score : 523.981 (+524.008 / -0.027)
-     Dependants : 564 (561 from non owners)
-     Releases   : 22 (0.0 months without a release)
-     Max Version: 0.9.1
-     License    : MIT/Apache-2.0
-     Repository : https://github.com/serde-rs/json
-     Description: A JSON serialization file format
-   
-   (3) bincode
-     Crate Score: 326.558 (+327.692 / -1.135)
-     Repo Score : 342.665 (+346.069 / -3.404)
-     Dependants : 36 (33 from non owners)
-     Releases   : 35 (0.7 months without a release)
-     Max Version: 0.6.1
-     License    : MIT
-     Repository : https://github.com/TyOverby/bincode
-     Description: A binary serialization / deserialization strategy and implementation with serde and rustc-serialize backends.
-
-   ```
-
-   vs.
-
-   ```
-   $ cargo search deserialize
-   bytevec (0.2.0)               A Rust serialization library that uses byte vectors
-   serializable_enum (0.3.1)     Two macros for implementing serialization / deserialization for enums containing no datavariants
-   serde_json (0.9.1)            A JSON serialization file format
-   serde-redis (0.5.1)           Serde deserialization for redis-rs
-   bincode (0.6.1)               A binary serialization / deserialization strategy and implementation with serde and rustc-serialize backends.
-   bincode_core (0.6.0)          A binary serialization / deserialization strategy and implementation for serde.
-   serde (0.9.1)                 A generic serialization/deserialization framework
-   serde_test (0.9.1)            Token De/Serializer for testing De/Serialize implementations
-   serde_yaml (0.5.1)            YAML support for Serde
-   abomonation_derive (0.1.0)    macros 1.1 derive crate for abomonation
-   ... and 51 crates more (use --limit N to see more)
-   ```
-
 ## Caveats
 
  * The code is horrible. Please don't look. It also lacks tests and comments.
@@ -602,32 +278,6 @@
  *The swarm* is deciding what crates it wants to use. And it is continually
  adjusting those decisions. And we can easily follow those decisions and
  adjustments.
-
- Take `serde` vs. `rustc_serialize` as an example. I personally prefer serde.
- And I use it for deserialization in this very tool.
-
- *The community* has been talking about `serde` deprecating `rustc_serialize`
- for months. Especially after gaining the ability to deserialize objects with
- unknown fields, and `Macros 1.1` landing in the language. But did the swarm
- move to `serde` en masse already?
-
- > **Note:** I started writing this section right before `serde`'s 0.9 release.
-
- As of now, `serde` is a hard dependency of 553 crates. `rustc_serialize`
- is a hard dependency of 750 crates. And rustaceans are hardly known for their
- conservative development tendencies.
-
- What that tells us is that the majority of rustaceans are content with
- `rustc_serialize`. And have no reason, or feel no urgency, to move
- to `serde`.
-
- Will the picture be the same in three months? After `Macros 1.1` enjoys
- a few stable releases? And after serde enjoys its next major release?
-
- We don't know.
- 
- But we will know... in three months. Without the need for anyone
- to tell us. And without the need for us to take their word for it.
 
  Curation/Officiating/Blessing processes also invite their own problems.
  From favouritism to social engineering. And from **Tip Rot(TM)** to maintenance
