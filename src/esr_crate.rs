@@ -48,10 +48,15 @@ pub struct CrateReleaseInfo {
 
 #[derive(Deserialize, Debug, Clone)]
 struct DependantInfo {
-    crate_id: String, // crate name
     default_features: bool,
     optional: bool,
     req: String, // version required
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct DependantName {
+    #[serde(rename = "crate")]
+    crate_name: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -92,11 +97,14 @@ impl EsrFrom for CrateOwners {
 struct CrateDependants {
     #[serde(rename = "dependencies")]
     dependants: Vec<DependantInfo>,
+    #[serde(rename = "versions")]
+    names: Vec<DependantName>,
     meta: HashMap<String, usize>,
 }
 
 impl EsrFromMulti for CrateDependants {
     type Inner = DependantInfo;
+    type Inner2 = DependantName;
 
     fn get_meta(&self) -> &HashMap<String, usize> {
         &self.meta
@@ -108,6 +116,14 @@ impl EsrFromMulti for CrateDependants {
 
     fn get_inner_mut(&mut self) -> &mut Vec<Self::Inner> {
         &mut self.dependants
+    }
+
+    fn get_inner2_opt(&self) -> Option<&Vec<Self::Inner2>> {
+        Some(&self.names)
+    }
+
+    fn get_inner2_mut_opt(&mut self) -> Option<&mut Vec<Self::Inner2>> {
+        Some(&mut self.names)
     }
 }
 
@@ -402,10 +418,10 @@ impl CrateScoreInfo {
 
         let dependants_by_owners =
             crate_info.dependants
-                .dependants
+                .names
                 .iter()
-                .filter_map(|dependant| {
-                    owners_crates_flat.iter().find(|cr| cr.id == dependant.crate_id)
+                .filter_map(|dependant_name| {
+                    owners_crates_flat.iter().find(|cr| cr.id == dependant_name.crate_name)
                 })
                 .count();
 
