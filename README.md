@@ -69,40 +69,40 @@
   Repository : https://github.com/carllerche/mio
   Description: Lightweight non-blocking IO
 
-  --------------------------------------------
-  Crate Score Details
-  --------------------------------------------
-  has_desc                   |     1 * 5.000      | +5.000
-  has_license                  |     1 * 5.000      | +5.000
-  has_docs                   |     1 * 15.000     | +15.000
-  activity_span_in_months.powf(0.5)       |   5.548 * 6.000    | +33.289
-  releases                   |     27 * 0.500     | +13.500
-  non_yanked_releases              |     27 * 0.500     | +13.500
-  stable_releases                |     27 * 0.500     | +13.500
-  last_2_non_yanked_releases_downloads / 2   |   19687 * 0.001    | +19.687
-  dependants                  |     94 * 0.500     | +47.000
-  hard_dependants                |     91 * 0.750     | +68.250
-  dependants_on_current_versions        |     65 * 0.750     | +48.750
-  dependants_from_non_owners          |     84 * 2.500     | +210.000
-  months_since_last_release.powf(1.5)      |   1.029 * -2.000   | -2.058
-  empty_or_all_yanked              |   0 * -5000.000    | 0.000
+ --------------------------------------------
+             Crate Score Details
+ --------------------------------------------
+                   has_desc                   |     1 * 5.000      | +5.000
+                 has_license                  |     1 * 5.000      | +5.000
+                   has_docs                   |     1 * 15.000     | +15.000
+      activity_span_in_months.powf(0.5)       |   5.548 * 6.000    | +33.289
+                   releases                   |     27 * 0.500     | +13.500
+             non_yanked_releases              |     27 * 0.500     | +13.500
+               stable_releases                |     27 * 0.500     | +13.500
+   last_2_non_yanked_releases_downloads / 2   |   19687 * 0.001    | +19.687
+                  dependants                  |     94 * 0.500     | +47.000
+               hard_dependants                |     91 * 0.750     | +68.250
+        dependants_on_current_versions        |     65 * 0.750     | +48.750
+          dependants_from_non_owners          |     84 * 2.500     | +210.000
+     months_since_last_release.powf(1.5)      |   1.029 * -2.000   | -2.058
+             empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
-  Crate Score: 490.418 (+492.476 / -2.058)
+ Crate Score: 490.418 (+492.476 / -2.058)
  
-  --------------------------------------------
-  Repo Score Details
-  --------------------------------------------
-  subscribers                  |    112 * 0.500     | +56.000
-  contributors_up_to_100            |     87 * 3.000     | +261.000
-  commits_from_upto_100_contributors      |    548 * 0.100     | +54.800
-  secondary_contribution_pct          |     45 * 5.000     | +225.000
-  push_span_in_months.powf(0.5)         |   5.848 * 5.000    | +29.240
-  merged_pull_requests_in_last_100       |     47 * 2.000     | +94.000
-  months_since_last_pr_merged.powf(1.5)     |   0.249 * -1.000   | -0.249
-  months_since_last_issue_closed.powf(1.5)   |   0.249 * -1.000   | -0.249
-  months_since_last_push.powf(1.5)       |   0.205 * -4.000   | -0.820
+ --------------------------------------------
+              Repo Score Details
+ --------------------------------------------
+                 subscribers                  |    112 * 0.500     | +56.000
+            contributors_up_to_100            |     87 * 3.000     | +261.000
+      commits_from_upto_100_contributors      |    548 * 0.100     | +54.800
+          secondary_contribution_pct          |     45 * 5.000     | +225.000
+        push_span_in_months.powf(0.5)         |   5.848 * 5.000    | +29.240
+       merged_pull_requests_in_last_100       |     47 * 2.000     | +94.000
+    months_since_last_pr_merged.powf(1.5)     |   0.249 * -1.000   | -0.249
+   months_since_last_issue_closed.powf(1.5)   |   0.249 * -1.000   | -0.249
+       months_since_last_push.powf(1.5)       |   0.205 * -4.000   | -0.820
  
-  Repo Score : 718.721 (+720.040 / -1.318)
+ Repo Score : 718.721 (+720.040 / -1.318)
 
  ```
 
