@@ -66,7 +66,7 @@ fn main() {
     let crate_only = m.is_present("crate-only");
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
-    let search_limit = m.value_of("search-limit").unwrap_or("30");
+    let search_limit = m.value_of("search-limit").unwrap_or("40");
     let formatted = isatty::stdout_isatty() && !m.is_present("no-color");
 
     let results_limit_num = check_limit(results_limit);

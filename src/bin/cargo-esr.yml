@@ -22,7 +22,7 @@ args:
       aliases: [limit]
       takes_value: true
       empty_values: false
-      help: "Limit the number of searched & ranked items (default: 30, valid: 2-50)"
+      help: "Limit the number of searched & ranked items (default: 40, valid: 2-50)"
   - results-limit:
       short: L
       long: results-limit
