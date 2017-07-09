@@ -33,6 +33,10 @@ args:
       short: o
       long: crate-only
       help: "Get crate info only, without repository scores"
+  - search-by-relevance:
+      short: r
+      long: search-by-relevance
+      help: "Get the scores of the best matches and rank them (default: searching by download count)"
   - sort-positive:
       short: p
       long: sort-positive

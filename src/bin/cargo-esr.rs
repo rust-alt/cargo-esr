@@ -64,6 +64,7 @@ fn main() {
     let m = clap_app.get_matches_from(args);
 
     let crate_only = m.is_present("crate-only");
+    let search_by_relevance = m.is_present("search-by-relevance");
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
     let search_limit = m.value_of("search-limit").unwrap_or("40");
@@ -107,8 +108,13 @@ fn main() {
                 .trim_right_matches('+')
                 .to_string();
 
-            let search_res = CrateSearch::from_id_single_page(&("per_page=".to_string() + search_limit + "&q=" +
-                                                                &search_str));
+            let mut search_args = "per_page=".to_string() + search_limit + "&q=" + &search_str;
+
+            if !search_by_relevance {
+                search_args += "&sort=downloads";
+            }
+
+            let search_res = CrateSearch::from_id_single_page(&search_args);
 
             if let Ok(search) = search_res {
                 let crates = search.get_crates();
