@@ -59,50 +59,50 @@
  ```
  $ cargo esr -c mio
  mio
-  Crate Score: 490.418 (+492.476 / -2.058)
-  Repo Score : 718.721 (+720.040 / -1.318)
+  Crate Score: 495.209 (+497.363 / -2.153)
+  Repo Score : 718.548 (+720.040 / -1.491)
   Releases   : 27+0+0
-  Max Version: 0.6.9 (released 1.0 months ago)
-  Last Stable: 0.6.9 (released 1.0 months ago)
-  Dependants : 94 (84 from non owners)
+  Max Version: 0.6.9 (released 1.1 months ago)
+  Last Stable: 0.6.9 (released 1.1 months ago)
+  Dependants : 95 (85 from non owners)
   License    : MIT
   Repository : https://github.com/carllerche/mio
   Description: Lightweight non-blocking IO
-
- --------------------------------------------
-             Crate Score Details
- --------------------------------------------
-                   has_desc                   |     1 * 5.000      | +5.000
-                 has_license                  |     1 * 5.000      | +5.000
-                   has_docs                   |     1 * 15.000     | +15.000
-      activity_span_in_months.powf(0.5)       |   5.548 * 6.000    | +33.289
-                   releases                   |     27 * 0.500     | +13.500
-             non_yanked_releases              |     27 * 0.500     | +13.500
-               stable_releases                |     27 * 0.500     | +13.500
-   last_2_non_yanked_releases_downloads / 2   |   19687 * 0.001    | +19.687
-                  dependants                  |     94 * 0.500     | +47.000
-               hard_dependants                |     91 * 0.750     | +68.250
-        dependants_on_current_versions        |     65 * 0.750     | +48.750
-          dependants_from_non_owners          |     84 * 2.500     | +210.000
-     months_since_last_release.powf(1.5)      |   1.029 * -2.000   | -2.058
-             empty_or_all_yanked              |   0 * -5000.000    | 0.000
  
- Crate Score: 490.418 (+492.476 / -2.058)
+ -------------------------------------------------
+                Crate Score Details
+ -------------------------------------------------
+                     has_desc                      |     1 * 5.000      | +5.000
+                    has_license                    |     1 * 5.000      | +5.000
+                     has_docs                      |     1 * 15.000     | +15.000
+         activity_span_in_months.powf(0.5)         |   5.548 * 6.000    | +33.289
+                     releases                      |     27 * 0.500     | +13.500
+                non_yanked_releases                |     27 * 0.500     | +13.500
+                  stable_releases                  |     27 * 0.500     | +13.500
+  last_2_non_yanked_releases_downloads.powf(0.5)   |  200.736 * 0.100   | +20.074
+                    dependants                     |     95 * 0.500     | +47.500
+                  hard_dependants                  |     92 * 0.750     | +69.000
+          dependants_on_current_versions           |     66 * 0.750     | +49.500
+            dependants_from_non_owners             |     85 * 2.500     | +212.500
+        months_since_last_release.powf(1.5)        |   1.077 * -2.000   | -2.153
+                empty_or_all_yanked                |   0 * -5000.000    | 0.000
  
- --------------------------------------------
-              Repo Score Details
- --------------------------------------------
-                 subscribers                  |    112 * 0.500     | +56.000
-            contributors_up_to_100            |     87 * 3.000     | +261.000
-      commits_from_upto_100_contributors      |    548 * 0.100     | +54.800
-          secondary_contribution_pct          |     45 * 5.000     | +225.000
-        push_span_in_months.powf(0.5)         |   5.848 * 5.000    | +29.240
-       merged_pull_requests_in_last_100       |     47 * 2.000     | +94.000
-    months_since_last_pr_merged.powf(1.5)     |   0.249 * -1.000   | -0.249
-   months_since_last_issue_closed.powf(1.5)   |   0.249 * -1.000   | -0.249
-       months_since_last_push.powf(1.5)       |   0.205 * -4.000   | -0.820
+ Crate Score: 495.209 (+497.363 / -2.153)
  
- Repo Score : 718.721 (+720.040 / -1.318)
+ -------------------------------------------------
+                Repo Score Details
+ -------------------------------------------------
+                    subscribers                    |    112 * 0.500     | +56.000
+              contributors_up_to_100               |     87 * 3.000     | +261.000
+        commits_from_upto_100_contributors         |    548 * 0.100     | +54.800
+            secondary_contribution_pct             |     45 * 5.000     | +225.000
+           push_span_in_months.powf(0.5)           |   5.848 * 5.000    | +29.240
+         merged_pull_requests_in_last_100          |     47 * 2.000     | +94.000
+       months_since_last_pr_merged.powf(1.5)       |   0.279 * -1.000   | -0.279
+     months_since_last_issue_closed.powf(1.5)      |   0.279 * -1.000   | -0.279
+         months_since_last_push.powf(1.5)          |   0.233 * -4.000   | -0.933
+ 
+ Repo Score : 718.548 (+720.040 / -1.491)
 
  ```
 
@@ -143,9 +143,17 @@
 #### stable_releases
    The number of non-yanked non-pre releases the crate has.
 
-#### last_2_non_yanked_releases_downloads / 2
-   An estimate for the current number of downloads per release.
-   This factor has the weakest weight (0.001) among all others.
+#### last_2_non_yanked_releases_downloads.powf(0.5)
+   The total number of downloads of the last two non-yanked releases.
+
+   Non-linear because we want to limit the effect a huge number of downloads can
+   have on the total score.
+
+   A huge number of downloads for a seemingly-unpopular crate is not necessarily
+   a faked stat. Some crates were dependencies of one or more popular crates,
+   but they are not anymore.
+
+   This factor will be adjusted if date-based download stats ever become available.
 
 #### dependants
    The number of dependants (a.k.a. reverse dependencies).

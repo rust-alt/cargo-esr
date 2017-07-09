@@ -13,7 +13,7 @@ macro_rules! score_add {
   ($table:ident, $score:ident, $count:expr, $weight:expr) => {
       {
           let incr = ($count as f64) * $weight;
-          let count_str = format!("{: ^44}", stringify!($count).replace("self.", ""));
+          let count_str = format!("{: ^49}", stringify!($count).replace("self.", ""));
           let count_mul_weight_num = format!("{: ^18}", format!("{:.3} * {:.3}", $count, $weight));
           let incr_num_str = format!("{:.3}", incr);
           $table.push((count_str, count_mul_weight_num, incr_num_str));

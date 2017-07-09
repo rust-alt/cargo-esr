@@ -334,7 +334,7 @@ pub struct CrateScoreInfo {
     releases: usize,
     non_yanked_releases: usize,
     stable_releases: usize,
-    last_2_non_yanked_releases_downloads: usize,
+    last_2_non_yanked_releases_downloads: f64,
     dependants: usize,
     hard_dependants: usize,
     dependants_on_current_versions: usize,
@@ -360,7 +360,7 @@ impl CrateScoreInfo {
             .non_yanked_releases()
             .iter()
             .take(2)
-            .map(|release| release.downloads)
+            .map(|release| release.downloads as f64)
             .sum();
 
         // time related info
@@ -467,8 +467,8 @@ impl CrateScoreInfo {
         score_add!(table, positive_score, self.stable_releases, 0.5);
         score_add!(table,
                    positive_score,
-                   self.last_2_non_yanked_releases_downloads / 2,
-                   0.001);
+                   self.last_2_non_yanked_releases_downloads.powf(0.5),
+                   0.1);
 
         score_add!(table, positive_score, self.dependants, 0.5);
         score_add!(table, positive_score, self.hard_dependants, 0.75);
