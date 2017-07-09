@@ -111,7 +111,11 @@ impl EsrPrinter {
         let mut multi_line = fixed_ws;
 
         while multi_line.len() - last_n > 64 {
-            let new_n = multi_line[last_n+1..last_n+64].rfind(' ').unwrap_or(last_n);
+            let new_n = multi_line
+                .get(last_n+1..last_n+64)
+                .and_then(|slice| slice.rfind(' '))
+                .unwrap_or(last_n);
+
             if new_n != last_n {
                 assert!(last_n+new_n+1 < multi_line.len());
                 unsafe { multi_line.as_mut_vec()[last_n+new_n+1] = b'\0' };

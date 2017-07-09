@@ -11,6 +11,7 @@
 
 #![feature(inclusive_range_syntax)]
 #![feature(conservative_impl_trait)]
+#![feature(str_checked_slicing)]
 
 #[macro_use]
 extern crate error_chain;
