@@ -450,7 +450,7 @@ impl CrateScoreInfo {
     fn mk_score(&self) -> (Vec<(String, String, String)>, f64, f64) {
         let mut positive_score = 0.0;
         let mut negative_score = 0.0;
-        let mut table = Vec::with_capacity(10);
+        let mut table = Vec::with_capacity(100);
 
         // +ve
         score_add!(table, positive_score, self.has_desc, 5.0);

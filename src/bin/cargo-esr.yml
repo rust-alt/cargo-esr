@@ -22,13 +22,13 @@ args:
       aliases: [limit]
       takes_value: true
       empty_values: false
-      help: "Limit the number of searched & ranked items (default: 25, valid: 2-50)"
+      help: "Limit the number of searched & ranked items (default: 25, valid: 5-100)"
   - results-limit:
       short: L
       long: results-limit
       takes_value: true
       empty_values: false
-      help: "Limit the number of top-ranking results shown (default: 10, valid: 2-50)"
+      help: "Limit the number of top-ranking results shown (default: 10, valid: 5-100)"
   - crate-only:
       short: o
       long: crate-only
