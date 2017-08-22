@@ -65,7 +65,7 @@ impl CrateScores {
 
     pub fn print_detailed_scores(&self, formatted: bool) {
         let id = self.crate_full.get_info().get_id();
-        EsrFormatter::print_grp(&self.info_pair(id, false).1, formatted);
+        EsrFormatter::print_grp(&self.info_pair(id, false, formatted).1, formatted);
 
         let table = self.crate_full.get_score_table();
         EsrFormatter::print_grp(&EsrPrinter::score_details("Crate Score Details", table), formatted);
@@ -100,7 +100,7 @@ impl CrateScores {
         }
     }
 
-    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, Vec<EsrFormatter>) {
+    fn info_pair(&self, id: &str, sort_positive: bool, formatted: bool) -> (f64, Vec<EsrFormatter>) {
         let cr_info = self.crate_full.get_info();
         let (pos, neg) = self.crate_full.get_score_tuple();
 
@@ -133,7 +133,13 @@ impl CrateScores {
         let d_b_n_o = self.crate_full.get_score_info().get_dependants_from_non_owners();
         let dependants_msg = format!("{} ({} from non owners)", dependants, d_b_n_o);
 
-        let desc = EsrPrinter::desc(cr_info.get_description().unwrap_or("N/A"));
+        let desc = cr_info.get_description().map(|desc_str| {
+            if formatted {
+                EsrPrinter::desc(desc_str)
+            } else {
+                desc_str.into()
+            }
+        }).unwrap_or("N/A".into());
 
         let mut info_formatter = Vec::with_capacity(32);
         info_formatter.push(EsrPrinter::id(id));
@@ -156,7 +162,7 @@ impl CrateScores {
         for res in results {
             match *res {
                 (ref id, Ok(ref score_info)) => {
-                    results_vec.push(score_info.info_pair(id, sort_positive));
+                    results_vec.push(score_info.info_pair(id, sort_positive, formatted));
                 },
                 (ref id, Err(_)) => {
                     results_vec.push((f64::MIN, vec![EsrPrinter::err(&format!("{}: Failed to get score info.", id))]));
