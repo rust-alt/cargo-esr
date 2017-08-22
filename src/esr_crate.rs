@@ -29,7 +29,6 @@ pub struct CrateGeneralInfo {
     description: Option<String>,
     repository: Option<String>,
     documentation: Option<String>,
-    license: Option<String>,
 }
 
 impl CrateGeneralInfo {
@@ -44,6 +43,7 @@ pub struct CrateReleaseInfo {
     downloads: usize,
     num: String, // version
     yanked: bool,
+    license: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -262,11 +262,15 @@ impl CrateInfo {
     }
 
     pub fn get_license(&self) -> Option<&str> {
-        self.self_info
-            .general_info
-            .license
-            .as_ref()
-            .map(|s| s.as_str())
+        // TODO: re-write when impl Try for Option is implemented
+        let max_ver_rel = self.self_info.releases
+            .iter()
+            .find(|rel| rel.num == self.get_max_version());
+
+        match max_ver_rel {
+            None => None,
+            Some(rel) => rel.license.as_ref().map(|l| l.as_str()),
+        }
     }
 
     fn github_re() -> StdResult<&'static Regex, &'static regex::Error> {
@@ -350,7 +354,7 @@ impl CrateScoreInfo {
 
         let has_desc = general_info.description.is_some() as usize;
         let has_docs = general_info.documentation.is_some() as usize;
-        let has_license = general_info.license.is_some() as usize;
+        let has_license = crate_info.get_license().is_some() as usize;
         let empty_or_all_yanked = crate_info.empty_or_all_yanked() as usize;
 
         let releases = crate_info.all_releases().len();
