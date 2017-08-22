@@ -7,7 +7,7 @@ args:
       short: s
       long: search
       takes_value: true
-      empty_values: false
+      empty_values: true
       multiple: true
       help: "Search crates.io and return results sorted by score"
   - score:

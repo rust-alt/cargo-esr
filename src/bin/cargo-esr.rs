@@ -108,11 +108,12 @@ fn main() {
                 .trim_right_matches('+')
                 .to_string();
 
-            let mut search_args = "per_page=".to_string() + search_limit + "&q=" + &search_str;
-
-            if !search_by_relevance {
-                search_args += "&sort=downloads";
-            }
+            let search_args = match (search_str.is_empty(), search_by_relevance) {
+                (true, true)   => "per_page=".to_string() + search_limit,
+                (true, false)  => "per_page=".to_string() + search_limit + "&sort=downloads",
+                (false, true)  => "per_page=".to_string() + search_limit + "&q=" + &search_str,
+                (false, false) => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=downloads",
+            };
 
             let search_res = CrateSearch::from_id_single_page(&search_args);
 
