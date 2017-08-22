@@ -126,6 +126,7 @@ pub struct RepoScoreInfo {
     contributors_up_to_100: usize,
     commits_from_upto_100_contributors: usize,
     secondary_contribution_pct: usize,
+    tertiary_contribution_pct: usize,
     merged_pull_requests_in_last_100: usize,
     months_since_last_pr_merged: f64,
     months_since_last_issue_closed: f64,
@@ -157,13 +158,16 @@ impl RepoScoreInfo {
             .map(|contributor| contributor.contributions)
             .sum();
 
-        // Secondary contribution pct
-        let secondary_contribution_commits = (commits_from_upto_100_contributors -
-                                              repo_info.top_100_contributors[0].contributions) as
-                                             f64;
-        let secondary_contribution_pct_f64 = secondary_contribution_commits * 100.0 /
-                                             (commits_from_upto_100_contributors as f64);
-        let secondary_contribution_pct = secondary_contribution_pct_f64.ceil() as usize;
+        // Secondary and Tertiary contribution pct
+        let commits_f64 = commits_from_upto_100_contributors as f64;
+        let top_committer_contrib = repo_info.top_100_contributors[0].contributions as f64 / commits_f64;
+        let second_committer_contrib = repo_info.top_100_contributors.get(1)
+            .map(|c| c.contributions as f64 / commits_f64)
+            .unwrap_or(0_f64);
+
+
+        let secondary_contribution_pct = ((1.0 - top_committer_contrib) * 100.0).ceil() as usize;
+        let tertiary_contribution_pct = ((1.0 - top_committer_contrib - second_committer_contrib) * 100.0).ceil() as usize;
 
         // merged pull requests in last 100, months since last merged
         let merged_pull_requests_in_last_100 = repo_info.last_100_pull_requests
@@ -195,6 +199,7 @@ impl RepoScoreInfo {
             contributors_up_to_100,
             commits_from_upto_100_contributors,
             secondary_contribution_pct,
+            tertiary_contribution_pct,
             push_span_in_months,
             merged_pull_requests_in_last_100,
             months_since_last_pr_merged,
@@ -216,9 +221,10 @@ impl RepoScoreInfo {
                    self.commits_from_upto_100_contributors,
                    0.1);
 
-        // We only take secondary contribution into account if the repo has >= 50 commits
+        // We only take secondary/tertiary contribution into account if the repo has >= 50 commits
         if self.commits_from_upto_100_contributors >= 50 {
-            score_add!(table, positive_score, self.secondary_contribution_pct, 5.0);
+            score_add!(table, positive_score, self.secondary_contribution_pct, 2.0);
+            score_add!(table, positive_score, self.tertiary_contribution_pct, 3.0);
         }
 
         score_add!(table,
