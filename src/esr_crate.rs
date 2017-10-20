@@ -184,7 +184,7 @@ impl CrateInfo {
         let general_info = &self.self_info.general_info;
         self.all_releases().iter()
             .filter(|r| &r.num == &general_info.max_version).nth(0)
-            .map(|r| esr_util::age_in_months(&r.created_at))
+            .map(|r| esr_util::age_in_months(&esr_util::crate_to_iso8601(&r.created_at)))
     }
 
     pub fn last_stable_version(&self) -> Option<&str> {
@@ -192,7 +192,7 @@ impl CrateInfo {
     }
 
     pub fn last_stable_version_age(&self) -> Option<Result<f64>> {
-        self.stable_releases().get(0).map(|r| esr_util::age_in_months(&r.created_at))
+        self.stable_releases().get(0).map(|r| esr_util::age_in_months(&esr_util::crate_to_iso8601(&r.created_at)))
     }
 
     pub fn empty_or_all_yanked(&self) -> bool {
@@ -225,7 +225,7 @@ impl CrateInfo {
 
         // All releases in the last 30.5 days
         for release in &non_yanked_releases {
-            if esr_util::age_in_months(&release.created_at)? <= 1.0 {
+            if esr_util::age_in_months(&esr_util::crate_to_iso8601(&release.created_at))? <= 1.0 {
                 current_versions.push(&*release.num);
             } else {
                 break;
@@ -368,12 +368,12 @@ impl CrateScoreInfo {
             .sum();
 
         // time related info
-        let activity_span_in_months = esr_util::span_in_months(&general_info.created_at,
-                                                               &general_info.updated_at)?;
+        let activity_span_in_months = esr_util::span_in_months(&esr_util::crate_to_iso8601(&general_info.created_at),
+                                                               &esr_util::crate_to_iso8601(&general_info.updated_at))?;
 
         let months_since_last_release = match crate_info.non_yanked_releases().get(0) {
-            Some(last_release) => esr_util::age_in_months(&last_release.created_at)?,
-            None => esr_util::age_in_months(&general_info.created_at)?,
+            Some(last_release) => esr_util::age_in_months(&esr_util::crate_to_iso8601(&last_release.created_at))?,
+            None => esr_util::age_in_months(&esr_util::crate_to_iso8601(&general_info.created_at))?,
         };
 
         // Reverse dependencies
