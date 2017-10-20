@@ -55,7 +55,7 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
             let num_pages = (total as f64 / 100.0).ceil() as usize;
 
             // with_threads() is provided by the pipeliner::Pipeline trait
-            let more_pages = (2...num_pages)
+            let more_pages = (2..=num_pages)
                 .map(move |page| url.clone() + &format!("&page={}", page))
                 .with_threads(8)
                 .map(|page_url| Self::from_url(&page_url));
