@@ -93,11 +93,12 @@ fn main() {
                 CrateScores::from_id_with_token(crate_name, &gh_token)
             };
 
-            if let Ok(crate_scores) = crate_scores_res {
-                crate_scores.print_detailed_scores(formatted);
-            } else {
-                EsrPrinter::crate_no_score(crate_name);
-                std::process::exit(1);
+            match crate_scores_res {
+                Ok(crate_scores) => crate_scores.print_detailed_scores(formatted),
+                Err(ref e) => {
+                    EsrPrinter::crate_no_score(crate_name, e);
+                    std::process::exit(1);
+                },
             }
         },
 
@@ -115,29 +116,31 @@ fn main() {
                 (false, false) => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=downloads",
             };
 
-            let search_res = CrateSearch::from_id_single_page(&search_args);
+            match CrateSearch::from_id_single_page(&search_args) {
+                Ok(search) => {
+                    let crates = search.get_crates();
 
-            if let Ok(search) = search_res {
-                let crates = search.get_crates();
+                    if crates.is_empty() {
+                        EsrPrinter::search_no_results(&search_str);
+                        std::process::exit(1);
+                    }
 
-                if crates.is_empty() {
-                    EsrPrinter::search_no_results(&search_str);
+                    let crates_scores_res = CrateScores::collect_scores(
+                        crates,
+                        &gh_token,
+                        crate_only,
+                        search_limit_num);
+
+                    CrateScores::print_search_results(
+                        &*crates_scores_res,
+                        sort_positive,
+                        results_limit_num,
+                        formatted);
+                },
+                Err(ref e) => {
+                    EsrPrinter::search_failed(&search_str, e);
                     std::process::exit(1);
                 }
-
-                let crates_scores_res = CrateScores::collect_scores(
-                    crates,
-                    &gh_token,
-                    crate_only,
-                    search_limit_num);
-                CrateScores::print_search_results(
-                    &*crates_scores_res,
-                    sort_positive,
-                    results_limit_num,
-                    formatted);
-            } else {
-                EsrPrinter::search_failed(&search_str);
-                std::process::exit(1);
             }
         },
 

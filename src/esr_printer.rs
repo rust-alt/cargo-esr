@@ -188,8 +188,8 @@ impl EsrPrinter {
         score_formatted
     }
 
-    pub fn crate_no_score(id: &str) {
-        let msg = format!("Failed to get scores for crate \"{}\". Maybe it does not exist!", id);
+    pub fn crate_no_score(id: &str, e: &Error) {
+        let msg = format!("Failed to get scores for crate \"{}\". Maybe it does not exist.\n{}", id, backtrace_msg!(e));
         println!("{}", Red.bold().paint(&msg));
     }
 
@@ -198,8 +198,8 @@ impl EsrPrinter {
         println!("{}", Yellow.bold().paint(&msg));
     }
 
-    pub fn search_failed(search_pattern: &str) {
-        let msg = format!("Search for \"{}\" failed.", search_pattern);
+    pub fn search_failed(search_pattern: &str, e: &Error) {
+        let msg = format!("Search for \"{}\" failed.\n{}", search_pattern, backtrace_msg!(e));
         println!("{}", Red.bold().paint(&msg));
     }
 
