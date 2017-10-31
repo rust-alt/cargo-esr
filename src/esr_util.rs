@@ -4,8 +4,10 @@ use esr_errors::*;
 
 // Get ISO 8601-formatted string from crate API dates
 pub fn crate_to_iso8601(cr_date: &str) -> String {
-    let len = cr_date.len();
-    cr_date[0..len-7].to_string() + "Z"
+    match cr_date.rfind('.') {
+        None    => String::from(cr_date),
+        Some(i) => String::from(&cr_date[0..i]) + "Z",
+    }
 }
 
 fn date_sec(date: &str) -> Result<f64> {
