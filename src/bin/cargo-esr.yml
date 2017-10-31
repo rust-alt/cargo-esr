@@ -37,6 +37,14 @@ args:
       short: r
       long: search-by-relevance
       help: "Get the scores of the best matches and rank them (default: searching by download count)"
+  - search-by-recent-downloads:
+      short: d
+      long: search-by-recent-downloads
+      help: "Get the scores of the matching crates with the highest number of recent downloads (default)"
+  - search-by-total-downloads:
+      short: D
+      long: search-by-total-downloads
+      help: "Get the scores of the matching crates with the highest number of total downloads"
   - sort-positive:
       short: p
       long: sort-positive

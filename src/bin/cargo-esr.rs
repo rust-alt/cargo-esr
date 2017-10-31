@@ -59,16 +59,25 @@ fn main() {
         .args(&["search", "score"])
         .required(true);
 
-    let clap_app = App::from_yaml(yaml).group(search_or_score);
+    let search_by = ArgGroup::with_name("search-by")
+        .args(&["search-by-relevance", "search-by-recent-downloads", "search-by-total-downloads"])
+        .required(false);
+
+    let clap_app = App::from_yaml(yaml)
+        .group(search_or_score)
+        .group(search_by);
 
     let m = clap_app.get_matches_from(args);
 
     let crate_only = m.is_present("crate-only");
-    let search_by_relevance = m.is_present("search-by-relevance");
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
     let search_limit = m.value_of("search-limit").unwrap_or("25");
     let formatted = isatty::stdout_isatty() && !m.is_present("no-color");
+
+    let search_by_relevance = m.is_present("search-by-relevance");
+    let search_by_recent_downloads = m.is_present("search-by-recent-downloads");
+    let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
     let results_limit_num = check_limit(results_limit);
     let search_limit_num = check_limit(search_limit);
@@ -109,11 +118,20 @@ fn main() {
                 .trim_right_matches('+')
                 .to_string();
 
-            let search_args = match (search_str.is_empty(), search_by_relevance) {
-                (true, true)   => "per_page=".to_string() + search_limit,
-                (true, false)  => "per_page=".to_string() + search_limit + "&sort=downloads",
-                (false, true)  => "per_page=".to_string() + search_limit + "&q=" + &search_str,
-                (false, false) => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=downloads",
+            let search_args = match search_str.is_empty() {
+                true => match (search_by_relevance, search_by_total_downloads, search_by_recent_downloads) {
+                    // default
+                    (false, false, _) => "per_page=".to_string() + search_limit + "&sort=recent-downloads",
+                    (_, true, _)      => "per_page=".to_string() + search_limit + "&sort=downloads",
+                    (true, _, _)      => "per_page=".to_string() + search_limit,
+                },
+                false => match (search_by_relevance, search_by_total_downloads, search_by_recent_downloads) {
+                    // default
+                    (false, false, _) => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=recent-downloads",
+                    (_, true, _)      => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=downloads",
+                    (true, _, _)      => "per_page=".to_string() + search_limit + "&q=" + &search_str,
+                },
+
             };
 
             match CrateSearch::from_id_single_page(&search_args) {
