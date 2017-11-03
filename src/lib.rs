@@ -22,10 +22,7 @@ extern crate serde_derive;
 extern crate term_painter;
 extern crate serde;
 extern crate serde_json;
-extern crate hyper;
-extern crate native_tls;
-extern crate hyper_native_tls;
-
+extern crate reqwest;
 extern crate time;
 extern crate semver;
 extern crate pipeliner;

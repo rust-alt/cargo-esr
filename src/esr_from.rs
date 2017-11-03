@@ -12,10 +12,8 @@
 use serde_json;
 use serde::de::DeserializeOwned;
 
-use hyper_native_tls::NativeTlsClient;
-use hyper::client::{Client, RedirectPolicy};
-use hyper::net::HttpsConnector;
-use hyper::header::UserAgent;
+use reqwest::Client;
+use reqwest::header::UserAgent;
 
 use pipeliner::Pipeline;
 
@@ -23,19 +21,6 @@ use std::io::Read;
 use std::collections::HashMap;
 
 use esr_errors::*;
-
-pub fn mk_client() -> Result<Client> {
-    // Create a client.
-    let tls_client = NativeTlsClient::new()?;
-    let https_connector = HttpsConnector::new(tls_client);
-    let mut hyper_client = Client::with_connector(https_connector);
-
-    // client opts
-    hyper_client.set_redirect_policy(RedirectPolicy::FollowAll);
-
-    // ret
-    Ok(hyper_client)
-}
 
 // QUIZ: Explain `'static` in this context.
 pub trait EsrFromMulti: EsrFrom + Send + 'static {
@@ -121,10 +106,11 @@ pub trait EsrFrom: Sized + DeserializeOwned {
     }
 
     fn bytes_from_url(url: &str) -> Result<Vec<u8>> {
-        let client = mk_client()?;
+        let client = Client::builder().build()?;
+
         // Creating an outgoing request.
         let mut resp = client.get(url)
-            .header(UserAgent("cargo-esr/0.1".into()))
+            .header(UserAgent::new("cargo-esr/0.1"))
             .send()?;
 
         // Read the Response.

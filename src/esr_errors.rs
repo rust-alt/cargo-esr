@@ -10,18 +10,16 @@
 */
 
 use serde_json;
-use hyper;
-use native_tls;
 use time;
 use regex;
+use reqwest;
 
 error_chain! {
     foreign_links {
         StdIO(::std::io::Error);
-        Hyper(hyper::Error);
-        NativeTls(native_tls::Error);
         TimeParse(time::ParseError);
         SerdeJson(serde_json::Error);
         Regex(regex::Error);
+        Reqwest(reqwest::Error);
     }
 }
