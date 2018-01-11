@@ -219,7 +219,7 @@ impl RepoScoreInfo {
         score_add!(table,
                    positive_score,
                    self.commits_from_upto_100_contributors,
-                   0.1);
+                   0.05);
 
         // We only take secondary/tertiary contribution into account if the repo has >= 50 commits
         if self.commits_from_upto_100_contributors >= 50 {
