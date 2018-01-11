@@ -17,7 +17,7 @@ extern crate cargo_esr;
 use clap::{App, ArgGroup};
 
 use cargo_esr::esr_crate::CrateSearch;
-use cargo_esr::esr_score::CrateScores;
+use cargo_esr::esr_score::Scores;
 use cargo_esr::esr_printer::EsrPrinter;
 
 use std::env;
@@ -56,20 +56,26 @@ fn main() {
 
     let yaml = load_yaml!("cargo-esr.yml");
     let search_or_score = ArgGroup::with_name("search-or-score")
-        .args(&["search", "score"])
+        .args(&["search", "score", "gh-score"])
         .required(true);
 
     let search_by = ArgGroup::with_name("search-by")
         .args(&["search-by-relevance", "search-by-recent-downloads", "search-by-total-downloads"])
         .required(false);
 
+    let score_filter = ArgGroup::with_name("score-filter")
+        .args(&["crate-only", "repo-only"])
+        .required(false);
+
     let clap_app = App::from_yaml(yaml)
         .group(search_or_score)
-        .group(search_by);
+        .group(search_by)
+        .group(score_filter);
 
     let m = clap_app.get_matches_from(args);
 
     let crate_only = m.is_present("crate-only");
+    let repo_only = m.is_present("repo-only");
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
     let search_limit = m.value_of("search-limit").unwrap_or("25");
@@ -83,7 +89,7 @@ fn main() {
     let search_limit_num = check_limit(search_limit);
 
     let mut gh_token = String::with_capacity(48);
-    if !crate_only {
+    if m.value_of("gh-score").is_some() || !crate_only {
         if let Some(arg_token) = m.value_of("gh-token") {
             gh_token.push_str(arg_token);
         } else if let Ok(env_token) = std::env::var("CARGO_ESR_GH_TOKEN") {
@@ -94,15 +100,25 @@ fn main() {
         }
     }
 
-    match (m.value_of("score"), m.values_of("search")) {
-        (Some(crate_name), _) => {
-            let crate_scores_res = if crate_only {
-                CrateScores::from_id_crate_only(crate_name)
-            } else {
-                CrateScores::from_id_with_token(crate_name, &gh_token)
+    match (m.value_of("gh-score"), m.value_of("score"), m.values_of("search")) {
+        (Some(repo_path), _, _)  => {
+            match Scores::from_repo_with_token(repo_path, &gh_token) {
+                Ok(repo_scores) => repo_scores.print_detailed_scores(formatted),
+                Err(ref e) => {
+                    EsrPrinter::repo_no_score(repo_path, e);
+                    std::process::exit(1);
+                },
+            }
+        },
+        (_, Some(crate_name), _) => {
+            let crates_scores_res = match (crate_only, repo_only) {
+                (false, false) => Scores::from_id_with_token(crate_name, &gh_token),
+                (true, false)  => Scores::from_id_crate_only(crate_name),
+                (false, true)  => Scores::from_id_with_token_repo_only(crate_name, &gh_token),
+                (true, true)   => unreachable!(),
             };
 
-            match crate_scores_res {
+            match crates_scores_res {
                 Ok(crate_scores) => crate_scores.print_detailed_scores(formatted),
                 Err(ref e) => {
                     EsrPrinter::crate_no_score(crate_name, e);
@@ -111,7 +127,7 @@ fn main() {
             }
         },
 
-        (_, Some(search_pattern)) => {
+        (_, _, Some(search_pattern)) => {
             let search_str = search_pattern.fold(String::with_capacity(128), |s, p| s + p + "+")
                 // In case a multi-word search is quoted
                 .replace(' ', "+")
@@ -143,13 +159,14 @@ fn main() {
                         std::process::exit(1);
                     }
 
-                    let crates_scores_res = CrateScores::collect_scores(
+                    let crates_scores_res = Scores::collect_scores(
                         crates,
                         &gh_token,
                         crate_only,
+                        repo_only,
                         search_limit_num);
 
-                    CrateScores::print_search_results(
+                    Scores::print_search_results(
                         &*crates_scores_res,
                         sort_positive,
                         results_limit_num,
@@ -162,6 +179,6 @@ fn main() {
             }
         },
 
-        (_, _) => unreachable!(),
+        (_, _, _) => unreachable!(),
     }
 }

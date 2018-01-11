@@ -189,7 +189,12 @@ impl EsrPrinter {
     }
 
     pub fn crate_no_score(id: &str, e: &Error) {
-        let msg = format!("Failed to get scores for crate \"{}\". Maybe it does not exist.\n{}", id, backtrace_msg!(e));
+        let msg = format!("Failed to get scores for crate \"{}\": {}.", id, e);
+        println!("{}", Red.bold().paint(&msg));
+    }
+
+    pub fn repo_no_score(repo: &str, e: &Error) {
+        let msg = format!("Failed to get scores for repo \"{}\": {}.", repo, e);
         println!("{}", Red.bold().paint(&msg));
     }
 

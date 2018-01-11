@@ -16,6 +16,12 @@ args:
       takes_value: true
       empty_values: false
       help: "Get detailed score of a crate"
+  - gh-score:
+      short: g
+      long: gh-score
+      takes_value: true
+      empty_values: false
+      help: "Get score info of a repository (Full repo url or \"owner/repo\" or \"@owner/repo\")"
   - search-limit:
       short: l
       long: search-limit
@@ -32,7 +38,11 @@ args:
   - crate-only:
       short: C
       long: crate-only
-      help: "Get crate info only, without repository scores"
+      help: "Get crates.io info only, without repository scores"
+  - repo-only:
+      short: R
+      long: repo-only
+      help: "Get crate repository info only, without crates.io scores"
   - search-by-relevance:
       short: r
       long: search-by-relevance

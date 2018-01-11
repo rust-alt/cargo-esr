@@ -11,10 +11,8 @@
 
 use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
-use regex::{self, Regex};
 
 use std::collections::HashMap;
-use std::result::Result as StdResult;
 
 use esr_errors::*;
 use esr_util;
@@ -273,26 +271,10 @@ impl CrateInfo {
         }
     }
 
-    fn github_re() -> StdResult<&'static Regex, &'static regex::Error> {
-        lazy_static! {
-            static ref RE: StdResult<Regex, regex::Error> =
-                Regex::new(r".+://github.com/(.+?/.+?)(.git|/|$).*");
-        }
-        RE.as_ref()
-    }
-
     pub fn github_id(&self) -> Option<String> {
-        let repo_opt = &self.self_info.general_info.repository;
-        let re_res = Self::github_re();
-
-        match (repo_opt, re_res) {
-            (&Some(ref repo), Ok(re)) => {
-                match re.captures(repo) {
-                    Some(ref cap) if cap.len() >= 2 => Some(String::from(&cap[1])),
-                    _ => None,
-                }
-            }
-            _ => None,
+        match self.self_info.general_info.repository {
+            Some(ref repo) => esr_util::github_repo(repo),
+            None => None,
         }
     }
 
