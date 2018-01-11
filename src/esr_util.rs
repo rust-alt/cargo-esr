@@ -5,10 +5,17 @@ use esr_errors::*;
 use std::result::Result as StdResult;
 
 // Get ISO 8601-formatted string from crate API dates
-pub fn crate_to_iso8601(cr_date: &str) -> String {
-    match cr_date.rfind('.') {
-        None    => String::from(cr_date),
-        Some(i) => String::from(&cr_date[0..i]) + "Z",
+pub(crate) fn crate_to_iso8601(cr_date: &str) -> String {
+    match (cr_date.rfind('.'), cr_date.rfind('+'), cr_date.rfind('Z')) {
+        // Do nothing
+        (None, _, Some(_))    => String::from(cr_date),
+        // Crate format without micro seconds
+        (None, Some(i), None) => {
+            String::from(&cr_date[0..i]) + "Z"
+        },
+        // Crate format with micro seconds
+        (Some(i), Some(_), None) => String::from(&cr_date[0..i]) + "Z",
+        _ => unreachable!(),
     }
 }
 
