@@ -25,12 +25,10 @@
 
 ### Install
 
- A nightly compiler is required.
+ A **nightly** compiler is required.
 
  ```
- git clone https://github.com/rust-alt/cargo-esr.git
- cd cargo-esr
- cargo install
+ cargo install --force --git https://github.com/rust-alt/cargo-esr.git
  ```
 
  Now you can use `esr` as a `cargo` subcommand.
