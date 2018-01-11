@@ -46,11 +46,11 @@
 
  > Getting repository information requires passing
  > a [GitHub access token](https://github.com/settings/tokens/new)
- > with `-g <token>`. Or setting `CARGO_ESR_GH_TOKEN` in the environment.
+ > with `-t <token>`. Or setting `CARGO_ESR_GH_TOKEN` in the environment.
  >
  > This is required to avoid hitting rate-limits enforced by GitHub.
  >
- > Alternatively, passing `-o` will skip getting repository scores.
+ > Alternatively, passing `-C` will skip getting repository scores.
  >
 
 ## Detailed Scoring Criteria
@@ -58,13 +58,13 @@
  Let's take `mio`'s score as an example:
  ```
  $ cargo esr -c mio
- mio
-  Crate Score: 549.566 (+550.771 / -1.204)
-  Repo Score : 775.504 (+775.504 / -0.000)
-  Releases   : 28+0+0
-  Max Version: 0.6.10 (released 0.7 months ago)
-  Last Stable: 0.6.10 (released 0.7 months ago)
-  Dependants : 106 (94 from non owners)
+  mio
+  Crate Score: 615.475 (+615.630 / -0.155)
+  Repo Score : 791.627 (+791.733 / -0.106)
+  Releases   : 30+0+0
+  Max Version: 0.6.12 (released 0.2 months ago)
+  Last Stable: 0.6.12 (released 0.2 months ago)
+  Dependants : 118 (106 from non owners)
   License    : MIT
   Repository : https://github.com/carllerche/mio
   Description: Lightweight non-blocking IO
@@ -75,35 +75,35 @@
                      has_desc                      |     1 * 5.000      | +5.000
                     has_license                    |     1 * 5.000      | +5.000
                      has_docs                      |     1 * 15.000     | +15.000
-         activity_span_in_months.powf(0.5)         |   5.706 * 6.000    | +34.233
-                     releases                      |     28 * 0.500     | +14.000
-                non_yanked_releases                |     28 * 0.500     | +14.000
-                  stable_releases                  |     28 * 0.500     | +14.000
-  last_2_non_yanked_releases_downloads.powf(0.5)   |  272.872 * 0.100   | +27.287
-                    dependants                     |    106 * 0.500     | +53.000
-                  hard_dependants                  |    102 * 0.750     | +76.500
-          dependants_on_current_versions           |     77 * 0.750     | +57.750
-            dependants_from_non_owners             |     94 * 2.500     | +235.000
-        months_since_last_release.powf(1.5)        |   0.602 * -2.000   | -1.204
+         activity_span_in_months.powf(0.5)         |   6.143 * 6.000    | +36.859
+                     releases                      |     30 * 0.500     | +15.000
+                non_yanked_releases                |     30 * 0.500     | +15.000
+                  stable_releases                  |     30 * 0.500     | +15.000
+  last_2_non_yanked_releases_downloads.powf(0.5)   |  325.209 * 0.100   | +32.521
+                    dependants                     |    118 * 0.500     | +59.000
+                  hard_dependants                  |    113 * 0.750     | +84.750
+          dependants_on_current_versions           |     90 * 0.750     | +67.500
+            dependants_from_non_owners             |    106 * 2.500     | +265.000
+        months_since_last_release.powf(1.5)        |   0.078 * -2.000   | -0.155
                 empty_or_all_yanked                |   0 * -5000.000    | 0.000
  
- Crate Score: 549.566 (+550.771 / -1.204)
+ Crate Score: 615.475 (+615.630 / -0.155)
  
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
                     subscribers                    |    102 * 0.500     | +51.000
-              contributors_up_to_100               |     96 * 3.000     | +288.000
-        commits_from_upto_100_contributors         |    585 * 0.100     | +58.500
-            secondary_contribution_pct             |     48 * 2.000     | +96.000
-             tertiary_contribution_pct             |     38 * 3.000     | +114.000
-           push_span_in_months.powf(0.5)           |   6.001 * 5.000    | +30.004
-         merged_pull_requests_in_last_100          |     69 * 2.000     | +138.000
-       months_since_last_pr_merged.powf(1.5)       |   0.000 * -1.000   | -0.000
-     months_since_last_issue_closed.powf(1.5)      |   0.000 * -1.000   | -0.000
-         months_since_last_push.powf(1.5)          |   0.000 * -4.000   | -0.000
+              contributors_up_to_100               |    100 * 3.000     | +300.000
+        commits_from_upto_100_contributors         |    617 * 0.050     | +30.850
+            secondary_contribution_pct             |     50 * 2.000     | +100.000
+             tertiary_contribution_pct             |     40 * 3.000     | +120.000
+           push_span_in_months.powf(0.5)           |   6.377 * 5.000    | +31.883
+         merged_pull_requests_in_last_100          |     79 * 2.000     | +158.000
+       months_since_last_pr_merged.powf(1.5)       |   0.078 * -1.000   | -0.078
+     months_since_last_issue_closed.powf(1.5)      |   0.027 * -1.000   | -0.027
+         months_since_last_push.powf(1.5)          |   0.000 * -4.000   | -0.001
  
- Repo Score : 775.504 (+775.504 / -0.000)
+ Repo Score : 791.627 (+791.733 / -0.106)
 
  ```
 
@@ -279,7 +279,7 @@
  * Repo scores are biased towards multi-crate repositories.
 
  * The inactivity factors bias against complete, or maintenance-only crates. This will become more
-   relevant when the echo system matures.
+   relevant when the ecosystem matures.
 
 ## A Secondary Goal
 
