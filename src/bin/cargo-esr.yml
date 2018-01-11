@@ -50,7 +50,7 @@ args:
       long: sort-positive
       help: "Sort by positive scores only. Without taking inactivity into account"
   - gh-token:
-      short: g
+      short: t
       long: gh-token
       takes_value: true
       empty_values: false
