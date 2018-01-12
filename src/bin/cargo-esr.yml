@@ -1,5 +1,5 @@
 name: "cargo-esr"
-version: "0.2"
+version: "0.3"
 author: "Mohammad AlSaleh <CE.Mohammad.AlSaleh at gmail.com>"
 about: "cargo's Extended Search & Ranking tool"
 args:
