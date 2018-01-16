@@ -28,11 +28,14 @@ pub enum Scores {
 impl Scores {
     pub fn from_id_with_token(id: &str, gh_token: &str) -> Result<Self> {
         let cr_score = CrateInfoWithScore::from_id(id)?;
-        let repo_score = cr_score.get_info().github_id()
-            .ok_or("failed to get GitHub id")
-            .map(|gh_id| RepoInfoWithScore::from_id_with_token(&gh_id, gh_token))?;
+        let repo_score_res = cr_score.get_info().github_id()
+            .ok_or("Failed to get GitHub id")
+            .map(|gh_id| RepoInfoWithScore::from_id_with_token(&gh_id, gh_token));
 
-        Ok(Scores::CrateAndRepo(cr_score, repo_score))
+        match repo_score_res {
+            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score)),
+            Err(_) => Ok(Scores::CrateOnly(cr_score)),
+        }
     }
 
     pub fn from_id_crate_only(id: &str) -> Result<Self> {
