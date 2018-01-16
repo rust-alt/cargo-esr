@@ -13,7 +13,8 @@ use term_painter::{Style, ToStyle};
 use term_painter::Attr::{Plain, Bold};
 use term_painter::Color::{Red, Cyan, Yellow, Green, Blue};
 
-use esr_errors::{Result, EsrError, EsrFailExt};
+//use esr_errors::{Result, EsrError, EsrFailExt};
+use esr_errors::{Result, EsrError};
 
 #[derive(Clone)]
 pub struct EsrFormatter {
@@ -189,12 +190,12 @@ impl EsrPrinter {
     }
 
     pub fn crate_no_score(id: &str, e: &EsrError) {
-        let msg = format!("Failed to get scores for crate \"{}\". Maybe it does not exist.\n{}", id, e.causes_msg());
+        let msg = format!("{}.\nFailed to get scores for crate \"{}\". Maybe it does not exist.", e, id);
         println!("{}", Red.bold().paint(&msg));
     }
 
     pub fn repo_no_score(repo: &str, e: &EsrError) {
-        let msg = format!("Failed to get scores for repo \"{}\". Maybe it does not exist.\n{}", repo, e.causes_msg());
+        let msg = format!("{}.\nFailed to get scores for repo \"{}\". Maybe it does not exist.", e, repo);
         println!("{}", Red.bold().paint(&msg));
     }
 
@@ -204,7 +205,7 @@ impl EsrPrinter {
     }
 
     pub fn search_failed(search_pattern: &str, e: &EsrError) {
-        let msg = format!("Search for \"{}\" failed.\n{}", search_pattern, e.causes_msg());
+        let msg = format!("{}.\nSearch for \"{}\" failed.", e, search_pattern);
         println!("{}", Red.bold().paint(&msg));
     }
 

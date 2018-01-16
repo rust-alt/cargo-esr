@@ -14,44 +14,32 @@ use time;
 use regex;
 use reqwest;
 
-pub(crate) use failure::Fail;
-pub(crate) type Result<T> = ::std::result::Result<T, EsrError>;
+use std::{fmt, result};
 
-pub(crate) trait EsrFailExt : Fail + Sized {
-    fn causes_msg(&self) -> String {
-        let mut msg = String::with_capacity(4096);
-        for c in self.causes() {
-            msg.push_str("\n ");
-            msg.push_str(&c.to_string());
-        }
+pub type Result<T> = result::Result<T, EsrError>;
 
-        if msg != "" {
-            "Causes:".to_string() + &msg
-        }
-        else {
-            msg
-        }
-    }
-}
-
-#[derive(Fail, Debug)]
+#[derive(Debug)]
 pub enum EsrError {
-    #[fail(display = "IO Error: {}.", _0)]
     StdIO(::std::io::Error),
-    #[fail(display = "Time parsing Error: {}.", _0)]
     TimeParse(time::ParseError),
-    #[fail(display = "Deserialization Error: {}.", _0)]
     SerdeJson(serde_json::Error),
-    #[fail(display = "Regex Error: {}.", _0)]
     Regex(regex::Error),
-    #[fail(display = "Reqwest Error: {}.", _0)]
     Reqwest(reqwest::Error),
-    #[fail(display = "Error: {}.", _0)]
     Other(String),
 }
 
-
-impl EsrFailExt for EsrError {}
+impl fmt::Display for EsrError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            EsrError::StdIO(ref e) => write!(f, "IO Error: {}", e),
+            EsrError::TimeParse(ref e) => write!(f, "Time parsing Error: {}", e),
+            EsrError::SerdeJson(ref e) => write!(f, "Deserialization Error: {}", e),
+            EsrError::Regex(ref e) => write!(f, "Regex Error: {}", e),
+            EsrError::Reqwest(ref e) => write!(f, "Reqwest Error: {}", e),
+            EsrError::Other(ref e) => write!(f, "Error: {}", e),
+        }
+    }
+}
 
 impl From<::std::io::Error> for EsrError {
     fn from(e: ::std::io::Error) -> Self {
