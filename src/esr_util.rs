@@ -42,7 +42,7 @@ pub(crate) fn span_in_months(date1: &str, date2: &str) -> Result<f64> {
 pub(crate) fn github_re() -> &'static Result<Regex> {
     lazy_static! {
         static ref RE: Result<Regex> =
-            Ok(Regex::new(r"(.+://github.com/|@|^)(.+?/.+?)(.git|/|$).*")?);
+            Ok(Regex::new(r"(.+://github.com/|@|^)([^:/]+?/[^:/]+?)(.git$|$|/.*)")?);
     }
     &RE
 }
