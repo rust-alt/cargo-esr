@@ -20,7 +20,7 @@ use pipeliner::Pipeline;
 use std::io::Read;
 use std::collections::HashMap;
 
-use esr_errors::*;
+use esr_errors::Result;
 
 // QUIZ: Explain `'static` in this context.
 pub trait EsrFromMulti: EsrFrom + Send + 'static {

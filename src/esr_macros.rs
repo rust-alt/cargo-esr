@@ -9,15 +9,6 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-macro_rules! backtrace_msg {
-    ($e:ident) => {
-        match $e.backtrace() {
-            Some(b) => format!("{:?}", b),
-            None    => "Pass \"RUST_BACKTRACE=1\" if you want to get a detailed backtrace.".into(),
-        }
-    }
-}
-
 macro_rules! score_add {
   ($table:ident, $score:ident, $count:expr, $weight:expr) => {
       {

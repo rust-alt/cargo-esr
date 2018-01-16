@@ -14,7 +14,7 @@ use semver::{Version, VersionReq};
 
 use std::collections::HashMap;
 
-use esr_errors::*;
+use esr_errors::Result;
 use esr_util;
 use esr_from::{EsrFrom, DefEsrFrom, EsrFromMulti};
 

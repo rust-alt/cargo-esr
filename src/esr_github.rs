@@ -13,7 +13,7 @@ use pipeliner::Pipeline;
 
 use esr_from::{EsrFrom, DefEsrFrom};
 use esr_util;
-use esr_errors::*;
+use esr_errors::Result;
 
 #[derive(Deserialize, Debug)]
 struct PullRequestInfo {

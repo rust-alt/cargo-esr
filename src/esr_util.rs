@@ -1,8 +1,8 @@
 use time;
-use regex::{self, Regex};
+use regex::Regex;
 
-use esr_errors::*;
-use std::result::Result as StdResult;
+use esr_errors::Result;
+//use std::result::Result as StdResult;
 
 // Get ISO 8601-formatted string from crate API dates
 pub(crate) fn crate_to_iso8601(cr_date: &str) -> String {
@@ -38,17 +38,18 @@ pub(crate) fn span_in_months(date1: &str, date2: &str) -> Result<f64> {
     Ok(span)
 }
 
-pub(crate) fn github_re() -> StdResult<&'static Regex, &'static regex::Error> {
+//pub(crate) fn github_re() -> Result<&'static Regex> {
+pub(crate) fn github_re() -> &'static Result<Regex> {
     lazy_static! {
-        static ref RE: StdResult<Regex, regex::Error> =
-            Regex::new(r"(.+://github.com/|@|^)(.+?/.+?)(.git|/|$).*");
+        static ref RE: Result<Regex> =
+            Ok(Regex::new(r"(.+://github.com/|@|^)(.+?/.+?)(.git|/|$).*")?);
     }
-    RE.as_ref()
+    &RE
 }
 
 pub(crate) fn github_repo(repo: &str) -> Option<String> {
-    match github_re() {
-        Ok(re) => {
+    match *github_re() {
+        Ok(ref re) => {
             match re.captures(repo) {
                 Some(ref cap) if cap.len() >= 3 => Some(String::from(&cap[2])),
                 _ => None,

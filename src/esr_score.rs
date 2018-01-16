@@ -15,7 +15,7 @@ use esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
 use esr_github::RepoInfoWithScore;
 use esr_printer::{EsrPrinter, EsrFormatter};
 use esr_util;
-use esr_errors::*;
+use esr_errors::Result;
 
 use std::f64;
 
