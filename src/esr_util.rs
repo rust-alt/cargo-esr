@@ -2,7 +2,6 @@ use time;
 use regex::Regex;
 
 use esr_errors::Result;
-//use std::result::Result as StdResult;
 
 // Get ISO 8601-formatted string from crate API dates
 pub(crate) fn crate_to_iso8601(cr_date: &str) -> String {
@@ -38,7 +37,6 @@ pub(crate) fn span_in_months(date1: &str, date2: &str) -> Result<f64> {
     Ok(span)
 }
 
-//pub(crate) fn github_re() -> Result<&'static Regex> {
 pub(crate) fn github_re() -> &'static Result<Regex> {
     lazy_static! {
         static ref RE: Result<Regex> =
