@@ -9,9 +9,6 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-#![feature(inclusive_range_syntax)]
-#![feature(conservative_impl_trait)]
-
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
