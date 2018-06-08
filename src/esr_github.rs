@@ -122,9 +122,9 @@ impl RepoInfo {
 }
 
 pub struct RepoScoreInfo {
-    subscribers: usize,
+    subscribers: f64,
     contributors_up_to_100: usize,
-    commits_from_upto_100_contributors: usize,
+    commits_from_upto_100_contributors: f64,
     secondary_contribution_pct: usize,
     tertiary_contribution_pct: usize,
     merged_pull_requests_in_last_100: usize,
@@ -144,7 +144,7 @@ impl RepoScoreInfo {
         let months_since_last_push = esr_util::age_in_months(&general_info.pushed_at)?;
 
         // Get subscribers count
-        let subscribers = general_info.subscribers_count;
+        let subscribers = general_info.subscribers_count as f64;
 
         // Get contributor count, commit count using contributors info.
         if repo_info.top_100_contributors.is_empty() {
@@ -156,13 +156,13 @@ impl RepoScoreInfo {
         let commits_from_upto_100_contributors = repo_info.top_100_contributors
             .iter()
             .map(|contributor| contributor.contributions)
-            .sum();
+            .sum::<usize>() as f64;
 
         // Secondary and Tertiary contribution pct
-        let commits_f64 = commits_from_upto_100_contributors as f64;
-        let top_committer_contrib = repo_info.top_100_contributors[0].contributions as f64 / commits_f64;
+        let commits = commits_from_upto_100_contributors;
+        let top_committer_contrib = repo_info.top_100_contributors[0].contributions as f64 / commits;
         let second_committer_contrib = repo_info.top_100_contributors.get(1)
-            .map(|c| c.contributions as f64 / commits_f64)
+            .map(|c| c.contributions as f64 / commits)
             .unwrap_or(0_f64);
 
 
@@ -214,12 +214,12 @@ impl RepoScoreInfo {
         let mut table = Vec::with_capacity(9);
 
         // +ve
-        score_add!(table, positive_score, self.subscribers, 0.5);
+        score_add!(table, positive_score, self.subscribers.powf(0.5), 8.0);
         score_add!(table, positive_score, self.contributors_up_to_100, 3.0);
         score_add!(table,
                    positive_score,
-                   self.commits_from_upto_100_contributors,
-                   0.05);
+                   self.commits_from_upto_100_contributors.powf(0.5),
+                   2.0);
 
         // We only take secondary/tertiary contribution into account if the repo has >= 50 commits
         if self.commits_from_upto_100_contributors >= 50 {
