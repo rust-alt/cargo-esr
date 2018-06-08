@@ -53,13 +53,13 @@
  Let's take `mio`'s score as an example:
  ```
  $ cargo esr -c mio
-  mio
-  Crate Score: 615.475 (+615.630 / -0.155)
-  Repo Score : 791.627 (+791.733 / -0.106)
-  Releases   : 30+0+0
-  Max Version: 0.6.12 (released 0.2 months ago)
-  Last Stable: 0.6.12 (released 0.2 months ago)
-  Dependants : 118 (106 from non owners)
+ mio
+  Crate Score: 730.953 (+741.433 / -10.480)
+  Repo Score : 987.928 (+990.434 / -2.505)
+  Releases   : 32+0+0
+  Max Version: 0.6.14 (released 3.0 months ago)
+  Last Stable: 0.6.14 (released 3.0 months ago)
+  Dependants : 143 (127 from non owners)
   License    : MIT
   Repository : https://github.com/carllerche/mio
   Description: Lightweight non-blocking IO
@@ -70,35 +70,35 @@
                      has_desc                      |     1 * 5.000      | +5.000
                     has_license                    |     1 * 5.000      | +5.000
                      has_docs                      |     1 * 15.000     | +15.000
-         activity_span_in_months.powf(0.5)         |   6.143 * 6.000    | +36.859
-                     releases                      |     30 * 0.500     | +15.000
-                non_yanked_releases                |     30 * 0.500     | +15.000
-                  stable_releases                  |     30 * 0.500     | +15.000
-  last_2_non_yanked_releases_downloads.powf(0.5)   |  325.209 * 0.100   | +32.521
-                    dependants                     |    118 * 0.500     | +59.000
-                  hard_dependants                  |    113 * 0.750     | +84.750
-          dependants_on_current_versions           |     90 * 0.750     | +67.500
-            dependants_from_non_owners             |    106 * 2.500     | +265.000
-        months_since_last_release.powf(1.5)        |   0.078 * -2.000   | -0.155
+         activity_span_in_months.powf(0.5)         |   6.306 * 6.000    | +37.837
+                     releases                      |     32 * 0.500     | +16.000
+                non_yanked_releases                |     32 * 0.500     | +16.000
+                  stable_releases                  |     32 * 0.500     | +16.000
+  last_2_non_yanked_releases_downloads.powf(0.5)   |  525.966 * 0.100   | +52.597
+                    dependants                     |    143 * 0.500     | +71.500
+                  hard_dependants                  |    136 * 0.750     | +102.000
+          dependants_on_current_versions           |    116 * 0.750     | +87.000
+            dependants_from_non_owners             |    127 * 2.500     | +317.500
+        months_since_last_release.powf(1.5)        |   5.240 * -2.000   | -10.480
                 empty_or_all_yanked                |   0 * -5000.000    | 0.000
  
- Crate Score: 615.475 (+615.630 / -0.155)
+ Crate Score: 730.953 (+741.433 / -10.480)
  
  -------------------------------------------------
                 Repo Score Details
  -------------------------------------------------
-                    subscribers                    |    102 * 0.500     | +51.000
+               subscribers.powf(0.5)               |   10.198 * 8.000   | +81.584
               contributors_up_to_100               |    100 * 3.000     | +300.000
-        commits_from_upto_100_contributors         |    617 * 0.050     | +30.850
-            secondary_contribution_pct             |     50 * 2.000     | +100.000
-             tertiary_contribution_pct             |     40 * 3.000     | +120.000
-           push_span_in_months.powf(0.5)           |   6.377 * 5.000    | +31.883
-         merged_pull_requests_in_last_100          |     79 * 2.000     | +158.000
-       months_since_last_pr_merged.powf(1.5)       |   0.078 * -1.000   | -0.078
-     months_since_last_issue_closed.powf(1.5)      |   0.027 * -1.000   | -0.027
-         months_since_last_push.powf(1.5)          |   0.000 * -4.000   | -0.001
+   commits_from_upto_100_contributors.powf(0.5)    |   25.080 * 2.000   | +50.160
+            secondary_contribution_pct             |     50 * 2.500     | +125.000
+             tertiary_contribution_pct             |     41 * 5.000     | +205.000
+           push_span_in_months.powf(0.5)           |   6.738 * 5.000    | +33.690
+         merged_pull_requests_in_last_100          |     78 * 2.500     | +195.000
+       months_since_last_pr_merged.powf(1.5)       |   1.739 * -1.000   | -1.739
+     months_since_last_issue_closed.powf(1.5)      |   0.582 * -1.000   | -0.582
+         months_since_last_push.powf(1.5)          |   0.046 * -4.000   | -0.184
  
- Repo Score : 791.627 (+791.733 / -0.106)
+ Repo Score : 987.928 (+990.434 / -2.505)
 
  ```
 
@@ -196,14 +196,20 @@
 
 
 ### Repo Score
-#### subscribers
+#### subscribers.powf(0.5)
    The number of subscribers/watchers of the repo.
+
+   Non-linear because we want to limit the contribution from this factor
+   in very popular repositories.
 
 #### contributors_up_to_100
    The number of contributors to the repo. Up to a maximum of a 100.
 
-#### commits_from_upto_100_contributors
+#### commits_from_upto_100_contributors.powf(0.5)
    The number of commits pushed to the repo, from up to 100 contributors.
+
+   Non-linear because we want to limit the contribution from this factor
+   in repositories with a huge number of commits.
 
 #### secondary_contribution_pct
    For repositories with 50 or more commits. This represents the percentage
