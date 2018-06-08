@@ -25,20 +25,20 @@ use std::env;
 const LIMIT_LOW: usize = 5;
 const LIMIT_HIGH: usize = 100;
 
-fn check_limit(limit: &str) -> usize {
+fn check_limit(limit: &str, formatted: bool) -> usize {
     match str::parse::<usize>(limit) {
         Ok(limit_num) => {
             let ll = LIMIT_LOW;
             let lh = LIMIT_HIGH;
             if limit_num < ll || limit_num > lh {
-                EsrPrinter::limit_out_of_range(limit_num, ll, lh);
+                EsrPrinter::limit_out_of_range(limit_num, ll, lh, formatted);
                 std::process::exit(1);
             } else {
                 limit_num
             }
         },
         Err(_) => {
-            EsrPrinter::limit_invalid(limit);
+            EsrPrinter::limit_invalid(limit, formatted);
             std::process::exit(1);
         },
     }
@@ -85,8 +85,8 @@ fn main() {
     let search_by_recent_downloads = m.is_present("search-by-recent-downloads");
     let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
-    let results_limit_num = check_limit(results_limit);
-    let search_limit_num = check_limit(search_limit);
+    let results_limit_num = check_limit(results_limit, formatted);
+    let search_limit_num = check_limit(search_limit, formatted);
 
     let mut gh_token = String::with_capacity(48);
     if m.value_of("gh-score").is_some() || !crate_only {
@@ -95,7 +95,7 @@ fn main() {
         } else if let Ok(env_token) = std::env::var("CARGO_ESR_GH_TOKEN") {
             gh_token.push_str(&env_token);
         } else {
-            EsrPrinter::no_token();
+            EsrPrinter::no_token(formatted);
             std::process::exit(1);
         }
     }
@@ -105,7 +105,7 @@ fn main() {
             match Scores::from_repo_with_token(repo_path, &gh_token) {
                 Ok(repo_scores) => repo_scores.print_detailed_scores(formatted),
                 Err(ref e) => {
-                    EsrPrinter::repo_no_score(repo_path, e);
+                    EsrPrinter::repo_no_score(repo_path, e, formatted);
                     std::process::exit(1);
                 },
             }
@@ -121,7 +121,7 @@ fn main() {
             match crates_scores_res {
                 Ok(crate_scores) => crate_scores.print_detailed_scores(formatted),
                 Err(ref e) => {
-                    EsrPrinter::crate_no_score(crate_name, e);
+                    EsrPrinter::crate_no_score(crate_name, e, formatted);
                     std::process::exit(1);
                 },
             }
@@ -155,7 +155,7 @@ fn main() {
                     let crates = search.get_crates();
 
                     if crates.is_empty() {
-                        EsrPrinter::search_no_results(&search_str);
+                        EsrPrinter::search_no_results(&search_str, formatted);
                         std::process::exit(1);
                     }
 
@@ -173,7 +173,7 @@ fn main() {
                         formatted);
                 },
                 Err(ref e) => {
-                    EsrPrinter::search_failed(&search_str, e);
+                    EsrPrinter::search_failed(&search_str, e, formatted);
                     std::process::exit(1);
                 }
             }

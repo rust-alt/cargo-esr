@@ -37,13 +37,13 @@ impl EsrFormatter {
         }
     }
 
-    pub fn new_and_print(style: Option<&'static[term::Attr]>, text: &str, trail: &str) {
+    pub fn new_and_print(style: Option<&'static[term::Attr]>, text: &str, trail: &str, formatted: bool) {
         let new = Self {
             style,
             text: String::from(text),
             trail: String::from(trail),
         };
-        new.print(true); // TODO: assumed formatted=true here
+        new.print(formatted);
     }
 
     pub fn trail_only(trail: &str) -> Self {
@@ -217,44 +217,44 @@ impl EsrPrinter {
         score_formatted
     }
 
-    pub fn crate_no_score(id: &str, e: &EsrError) {
+    pub fn crate_no_score(id: &str, e: &EsrError, formatted: bool) {
         let msg = format!("{}.\nFailed to get scores for crate \"{}\". Maybe it does not exist.", e, id);
-        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn repo_no_score(repo: &str, e: &EsrError) {
+    pub fn repo_no_score(repo: &str, e: &EsrError, formatted: bool) {
         let msg = format!("{}.\nFailed to get scores for repo \"{}\". Maybe it does not exist.", e, repo);
-        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn search_no_results(search_pattern: &str) {
+    pub fn search_no_results(search_pattern: &str, formatted: bool) {
         let msg = format!("Searching for \"{}\" returned no results.", search_pattern);
-        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn search_failed(search_pattern: &str, e: &EsrError) {
+    pub fn search_failed(search_pattern: &str, e: &EsrError, formatted: bool) {
         let msg = format!("{}.\nSearch for \"{}\" failed.", e, search_pattern);
-        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn limit_out_of_range(limit: usize, min: usize, max: usize) {
+    pub fn limit_out_of_range(limit: usize, min: usize, max: usize, formatted: bool) {
         let msg = format!("{} is out of the range of valid limits. \
                           Please pass a value between {} and {}.", limit, min, max);
-        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn limit_invalid(limit: &str) {
+    pub fn limit_invalid(limit: &str, formatted: bool) {
         let msg = format!("\"{}\" is an invalid limit value.", limit);
-        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n", formatted);
     }
 
-    pub fn no_token() {
+    pub fn no_token(formatted: bool) {
         let msg = "Accessing GitHub's API wothout hitting rate-limits requires providing an access\
                    token.\n\n\
                    You can pass a token via -g/--gh-token option.\n\
                    Or by setting the variable CARGO_ESR_GH_TOKEN in the environment.\n\n\
                    To a acquire an access token, visit: <https://github.com/settings/tokens/new>\n\n\
                    Alternatively, you can pass -o/--crate-only to skip getting repository info.";
-        EsrFormatter::new_and_print(YELLOW_BOLD, msg, "\n");
+        EsrFormatter::new_and_print(YELLOW_BOLD, msg, "\n", formatted);
     }
 }
