@@ -222,9 +222,9 @@ impl RepoScoreInfo {
                    2.0);
 
         // We only take secondary/tertiary contribution into account if the repo has >= 50 commits
-        if self.commits_from_upto_100_contributors >= 50 {
-            score_add!(table, positive_score, self.secondary_contribution_pct, 2.0);
-            score_add!(table, positive_score, self.tertiary_contribution_pct, 3.0);
+        if self.commits_from_upto_100_contributors >= 50.0 {
+            score_add!(table, positive_score, self.secondary_contribution_pct, 2.5);
+            score_add!(table, positive_score, self.tertiary_contribution_pct, 5.0);
         }
 
         score_add!(table,
@@ -234,7 +234,7 @@ impl RepoScoreInfo {
         score_add!(table,
                    positive_score,
                    self.merged_pull_requests_in_last_100,
-                   2.0);
+                   2.5);
 
         // -ve
         score_add!(table,
