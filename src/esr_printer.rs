@@ -9,22 +9,27 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use term_painter::{Style, ToStyle};
-use term_painter::Attr::{Plain, Bold};
-use term_painter::Color::{Red, Cyan, Yellow, Green, Blue};
+use term::{self, Attr, color};
+
+const BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold]);
+const CYAN_BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold, Attr::ForegroundColor(color::CYAN)]);
+const RED_BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold, Attr::ForegroundColor(color::RED)]);
+const BLUE_BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold, Attr::ForegroundColor(color::BLUE)]);
+const GREEN_BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold, Attr::ForegroundColor(color::GREEN)]);
+const YELLOW_BOLD: Option<&'static[term::Attr]> = Some(&[Attr::Bold, Attr::ForegroundColor(color::YELLOW)]);
 
 //use esr_errors::{Result, EsrError, EsrFailExt};
 use esr_errors::{Result, EsrError};
 
 #[derive(Clone)]
 pub struct EsrFormatter {
-    style: Style,
+    style: Option<&'static[term::Attr]>,
     text: String,
     trail: String,
 }
 
 impl EsrFormatter {
-    pub fn new(style: Style, text: &str, trail: &str) -> Self {
+    pub fn new(style: Option<&'static[term::Attr]>, text: &str, trail: &str) -> Self {
         Self {
             style,
             text: String::from(text),
@@ -32,9 +37,18 @@ impl EsrFormatter {
         }
     }
 
+    pub fn new_and_print(style: Option<&'static[term::Attr]>, text: &str, trail: &str) {
+        let new = Self {
+            style,
+            text: String::from(text),
+            trail: String::from(trail),
+        };
+        new.print(true); // TODO: assumed formatted=true here
+    }
+
     pub fn trail_only(trail: &str) -> Self {
         Self {
-            style: Plain.to_style(),
+            style: None,
             text: String::new(),
             trail: String::from(trail),
         }
@@ -42,18 +56,32 @@ impl EsrFormatter {
 
     pub fn empty() -> Self {
         Self {
-            style: Plain.to_style(),
+            style: None,
             text: String::new(),
             trail: String::new(),
         }
     }
 
-    pub fn print(&self, formatted: bool) {
-        if formatted {
-            print!("{}{}", self.style.paint(&self.text), self.trail);
-        } else {
-            print!("{}{}", &self.text, self.trail);
+    fn _print(&self, formatted: bool) -> Result<()> {
+        match (formatted, term::stdout(), self.style) {
+            (true, Some(mut out), Some(style)) => {
+                for &s in style {
+                    out.attr(s)?;
+                }
+                write!(out, "{}", self.text)?;
+                out.reset()?;
+                write!(out, "{}", self.trail)?;
+                Ok(())
+            },
+            _ => {
+                print!("{}{}", &self.text, self.trail);
+                Ok(())
+            },
         }
+    }
+
+    pub fn print(&self, formatted: bool) {
+        self._print(formatted).expect("Printer failed. Something is wrong.");
     }
 
     pub fn print_grp(grp: &[Self], formatted: bool) {
@@ -70,28 +98,28 @@ pub struct EsrPrinter;
 impl EsrPrinter {
     pub fn msg_pair(msg: &str, val: &str) -> [EsrFormatter; 2] {
         [
-            EsrFormatter::new(Cyan.bold(), msg, ": "),
-            EsrFormatter::new(Bold.to_style(), val, "\n "),
+            EsrFormatter::new(CYAN_BOLD, msg, ": "),
+            EsrFormatter::new(BOLD, val, "\n "),
         ]
     }
 
     pub fn msg_pair_complex(msg: &str, val: &[EsrFormatter]) -> Vec<EsrFormatter> {
         let mut ret = Vec::with_capacity(val.len() + 1);
-        ret.push(EsrFormatter::new(Cyan.bold(), msg, ": "));
+        ret.push(EsrFormatter::new(CYAN_BOLD, msg, ": "));
         ret.extend_from_slice(val);
         ret
     }
 
     pub fn id(id: &str) -> EsrFormatter {
-        EsrFormatter::new(Blue.bold(), id, " ")
+        EsrFormatter::new(BLUE_BOLD, id, " ")
     }
 
     pub fn err(val: &str) -> EsrFormatter {
-        EsrFormatter::new(Red.bold(), val, "\n")
+        EsrFormatter::new(RED_BOLD, val, "\n")
     }
 
     pub fn all_yanked() -> EsrFormatter {
-        EsrFormatter::new(Red.bold(), "(empty/all yanked)", "\n ")
+        EsrFormatter::new(RED_BOLD, "(empty/all yanked)", "\n ")
     }
 
     pub fn desc(orig_desc: &str) -> String {
@@ -140,16 +168,16 @@ impl EsrPrinter {
 
     pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> [EsrFormatter; 3] {
         [
-            EsrFormatter::new(Green.bold(), &format!("{}", stable), "+"),
-            EsrFormatter::new(Yellow.bold(), &format!("{}", non_yanked_pre), "+"),
-            EsrFormatter::new(Red.bold(), &format!("{}", yanked), "\n "),
+            EsrFormatter::new(GREEN_BOLD, &format!("{}", stable), "+"),
+            EsrFormatter::new(YELLOW_BOLD, &format!("{}", non_yanked_pre), "+"),
+            EsrFormatter::new(RED_BOLD, &format!("{}", yanked), "\n "),
         ]
     }
 
     pub fn score_error(msg: &str) -> [EsrFormatter; 2] {
         [
-            EsrFormatter::new(Red.bold(), msg, ": "),
-            EsrFormatter::new(Bold.to_style(), "Error", "\n "),
+            EsrFormatter::new(RED_BOLD, msg, ": "),
+            EsrFormatter::new(BOLD, "Error", "\n "),
         ]
     }
 
@@ -159,10 +187,10 @@ impl EsrPrinter {
 
     pub fn score_overview(msg: &str, pos: f64, neg: f64) -> [EsrFormatter; 4] {
         [
-            EsrFormatter::new(Cyan.bold(), msg, ": "),
-            EsrFormatter::new(Yellow.bold(), &format!("{:.3}", pos + neg) , " ("),
-            EsrFormatter::new(Green.bold(), &format!("+{:.3}", pos) , " / "),
-            EsrFormatter::new(Red.bold(), &format!("{:.3}", neg) , ")\n "),
+            EsrFormatter::new(CYAN_BOLD, msg, ": "),
+            EsrFormatter::new(YELLOW_BOLD, &format!("{:.3}", pos + neg) , " ("),
+            EsrFormatter::new(GREEN_BOLD, &format!("+{:.3}", pos) , " / "),
+            EsrFormatter::new(RED_BOLD, &format!("{:.3}", neg) , ")\n "),
         ]
     }
 
@@ -171,19 +199,19 @@ impl EsrPrinter {
         let frame = format!("{: ^49}", "-".repeat(msg.len()));
 
         let mut score_formatted = Vec::with_capacity(4096);
-        score_formatted.push(EsrFormatter::new(Cyan.bold(), &*frame, "\n"));
-        score_formatted.push(EsrFormatter::new(Cyan.bold(), &*msg, "\n"));
-        score_formatted.push(EsrFormatter::new(Cyan.bold(), &*frame, "\n"));
+        score_formatted.push(EsrFormatter::new(CYAN_BOLD, &*frame, "\n"));
+        score_formatted.push(EsrFormatter::new(CYAN_BOLD, &*msg, "\n"));
+        score_formatted.push(EsrFormatter::new(CYAN_BOLD, &*frame, "\n"));
 
         for line in table {
             if line.1.find("* -").is_some() {
-                score_formatted.push(EsrFormatter::new(Yellow.bold(), &*line.0, " | "));
-                score_formatted.push(EsrFormatter::new(Red.bold(), &*line.1, " | "));
-                score_formatted.push(EsrFormatter::new(Red.bold(), &*line.2, "\n"));
+                score_formatted.push(EsrFormatter::new(YELLOW_BOLD, &*line.0, " | "));
+                score_formatted.push(EsrFormatter::new(RED_BOLD, &*line.1, " | "));
+                score_formatted.push(EsrFormatter::new(RED_BOLD, &*line.2, "\n"));
             } else {
-                score_formatted.push(EsrFormatter::new(Yellow.bold(), &*line.0, " | "));
-                score_formatted.push(EsrFormatter::new(Green.bold(), &*line.1, " | "));
-                score_formatted.push(EsrFormatter::new(Green.bold(), &*("+".to_string() + &*line.2), "\n"));
+                score_formatted.push(EsrFormatter::new(YELLOW_BOLD, &*line.0, " | "));
+                score_formatted.push(EsrFormatter::new(GREEN_BOLD, &*line.1, " | "));
+                score_formatted.push(EsrFormatter::new(GREEN_BOLD, &*("+".to_string() + &*line.2), "\n"));
             }
         }
         score_formatted
@@ -191,33 +219,33 @@ impl EsrPrinter {
 
     pub fn crate_no_score(id: &str, e: &EsrError) {
         let msg = format!("{}.\nFailed to get scores for crate \"{}\". Maybe it does not exist.", e, id);
-        println!("{}", Red.bold().paint(&msg));
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
     }
 
     pub fn repo_no_score(repo: &str, e: &EsrError) {
         let msg = format!("{}.\nFailed to get scores for repo \"{}\". Maybe it does not exist.", e, repo);
-        println!("{}", Red.bold().paint(&msg));
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
     }
 
     pub fn search_no_results(search_pattern: &str) {
         let msg = format!("Searching for \"{}\" returned no results.", search_pattern);
-        println!("{}", Yellow.bold().paint(&msg));
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
     }
 
     pub fn search_failed(search_pattern: &str, e: &EsrError) {
         let msg = format!("{}.\nSearch for \"{}\" failed.", e, search_pattern);
-        println!("{}", Red.bold().paint(&msg));
+        EsrFormatter::new_and_print(RED_BOLD, &msg, "\n");
     }
 
     pub fn limit_out_of_range(limit: usize, min: usize, max: usize) {
         let msg = format!("{} is out of the range of valid limits. \
                           Please pass a value between {} and {}.", limit, min, max);
-        println!("{}", Yellow.bold().paint(&msg));
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
     }
 
     pub fn limit_invalid(limit: &str) {
         let msg = format!("\"{}\" is an invalid limit value.", limit);
-        println!("{}", Yellow.bold().paint(&msg));
+        EsrFormatter::new_and_print(YELLOW_BOLD, &msg, "\n");
     }
 
     pub fn no_token() {
@@ -227,6 +255,6 @@ impl EsrPrinter {
                    Or by setting the variable CARGO_ESR_GH_TOKEN in the environment.\n\n\
                    To a acquire an access token, visit: <https://github.com/settings/tokens/new>\n\n\
                    Alternatively, you can pass -o/--crate-only to skip getting repository info.";
-        println!("{}", Yellow.bold().paint(msg));
+        EsrFormatter::new_and_print(YELLOW_BOLD, msg, "\n");
     }
 }
