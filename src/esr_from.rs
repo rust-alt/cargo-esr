@@ -22,11 +22,9 @@ use std::collections::HashMap;
 
 use esr_errors::Result;
 
-// QUIZ: Explain `'static` in this context.
 pub trait EsrFromMulti: EsrFrom + Send + 'static {
     type Inner: Clone;
     type Inner2: Clone;
-
 
     fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
         let url = url.to_string();
