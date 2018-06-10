@@ -31,4 +31,5 @@ pub mod esr_util;
 pub mod esr_crate;
 pub mod esr_github;
 pub mod esr_score;
+pub mod esr_formatter;
 pub mod esr_printer;
