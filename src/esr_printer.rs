@@ -109,27 +109,31 @@ impl EsrPrinter {
     }
 
     pub fn score_details(msg: &str, table: &[(String, String, String)]) -> EsrFormatter {
-        let msg = format!("{: ^49}", msg);
-        let frame = format!("{: ^49}", "-".repeat(msg.len()));
+        let msg = format!("|{: ^83}|", msg);
+        let frame ="-".repeat(85);
+
+        let sep = || EsrFormatter::new(CYAN_BOLD.into(), "| ");
+        let frame_line = || EsrFormatter::new(CYAN_BOLD.into(), &frame) + "\n";
 
         let mut score_formatted = "".into();
-        score_formatted += EsrFormatter::new(CYAN_BOLD.into(), &*frame) + "\n";
+        score_formatted += frame_line();
         score_formatted += EsrFormatter::new(CYAN_BOLD.into(), &*msg) + "\n";
-        score_formatted += EsrFormatter::new(CYAN_BOLD.into(), &*frame) + "\n";
+        score_formatted += frame_line();
 
         for line in table {
             if line.1.find("* -").is_some() {
-                score_formatted += EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + " | ";
-                score_formatted += EsrFormatter::new(RED_BOLD.into(), &*line.1) + " | ";
-                score_formatted += EsrFormatter::new(RED_BOLD.into(), &*line.2) + "\n";
+                score_formatted += sep() + EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + sep();
+                score_formatted += EsrFormatter::new(RED_BOLD.into(), &*line.1) + sep();
+                score_formatted += EsrFormatter::new(RED_BOLD.into(), &format!("{: ^11}", line.2)) + sep() + "\n";
+                score_formatted += frame_line();
             } else {
-                score_formatted += EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + " | ";
-                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &*line.1) + " | ";
-                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &*("+".to_string() + &*line.2)) + "\n";
+                score_formatted += sep() + EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + sep();
+                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &*line.1) + sep();
+                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
+                score_formatted += frame_line();
             }
         }
 
-        score_formatted += EsrFormatter::new(CYAN_BOLD.into(), &*frame) + "\n";
         score_formatted
     }
 
