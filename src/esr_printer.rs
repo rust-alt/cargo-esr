@@ -10,34 +10,33 @@
 */
 
 use esr_errors::{Result, EsrError};
-use esr_formatter::EsrFormatter;
+use tty_string::{TtyString, TtyStyle};
+use tty_string::color as C;
 
-use term::{Attr, color};
-
-const BOLD: [Attr; 1] = [Attr::Bold];
-const CYAN_BOLD: [Attr; 2] = [Attr::Bold, Attr::ForegroundColor(color::CYAN)];
-const RED_BOLD: [Attr; 2] = [Attr::Bold, Attr::ForegroundColor(color::RED)];
-const BLUE_BOLD: [Attr; 2] = [Attr::Bold, Attr::ForegroundColor(color::BLUE)];
-const GREEN_BOLD: [Attr; 2] = [Attr::Bold, Attr::ForegroundColor(color::GREEN)];
-const YELLOW_BOLD: [Attr; 2] = [Attr::Bold, Attr::ForegroundColor(color::YELLOW)];
+const RED_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::RED).with_bold();
+const GREEN_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::GREEN).with_bold();
+const BLUE_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::BLUE).with_bold();
+const YELLOW_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::YELLOW).with_bold();
+const CYAN_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::CYAN).with_bold();
 
 pub struct EsrPrinter;
 
 impl EsrPrinter {
-    pub fn msg_pair(msg: &str, val: impl Into<EsrFormatter>) -> EsrFormatter {
-        EsrFormatter::new(CYAN_BOLD.into(), msg) + ": " + val.into().with_merged_style(&BOLD.into()) + "\n "
+    pub fn msg_pair(msg: &str, val: impl Into<TtyString>) -> TtyString {
+        let val_bold = val.into().with_style(TtyStyle::bold());
+        TtyString::new(CYAN_BOLD(), msg) + ": " + val_bold  + "\n "
     }
 
-    pub fn id(id: &str) -> EsrFormatter {
-        EsrFormatter::new(BLUE_BOLD.into(), id)
+    pub fn id(id: &str) -> TtyString {
+        TtyString::new(BLUE_BOLD(), id)
     }
 
-    pub fn err(val: &str) -> EsrFormatter {
-        EsrFormatter::new(RED_BOLD.into(), val)
+    pub fn err(val: &str) -> TtyString {
+        TtyString::new(RED_BOLD(), val)
     }
 
-    pub fn all_yanked() -> EsrFormatter {
-        EsrFormatter::new(RED_BOLD.into(), "(empty/all yanked)")
+    pub fn all_yanked() -> TtyString {
+        TtyString::new(RED_BOLD(), "(empty/all yanked)")
     }
 
     pub fn desc(orig_desc: &str) -> String {
@@ -84,52 +83,52 @@ impl EsrPrinter {
         }
     }
 
-    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> EsrFormatter {
-        let stable_f = EsrFormatter::new(GREEN_BOLD.into(), &format!("{}", stable));
-        let non_yanked_pre_f = EsrFormatter::new(YELLOW_BOLD.into(), &format!("{}", non_yanked_pre));
-        let yanked_f = EsrFormatter::new(RED_BOLD.into(), &format!("{}", yanked));
+    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> TtyString {
+        let stable_f = TtyString::new(GREEN_BOLD(), &format!("{}", stable));
+        let non_yanked_pre_f = TtyString::new(YELLOW_BOLD(), &format!("{}", non_yanked_pre));
+        let yanked_f = TtyString::new(RED_BOLD(), &format!("{}", yanked));
         stable_f + "+" + non_yanked_pre_f + "+" + yanked_f
     }
 
-    pub fn score_error(msg: &str) -> EsrFormatter {
-        EsrFormatter::new(RED_BOLD.into(), msg) + ": " + EsrFormatter::new(BOLD.into(), "Error") + "\n "
+    pub fn score_error(msg: &str) -> TtyString {
+        TtyString::new(RED_BOLD(), msg) + ": " + TtyString::new(TtyStyle::bold(), "Error") + "\n "
     }
 
-    pub fn score_na(msg: &str) -> EsrFormatter {
+    pub fn score_na(msg: &str) -> TtyString {
         Self::msg_pair(msg, "N/A")
     }
 
-    pub fn score_overview(msg: &str, pos: f64, neg: f64) -> EsrFormatter {
-        let score_f = EsrFormatter::new(YELLOW_BOLD.into(), &format!("{:.3}", pos + neg));
-        let score_pos_f = EsrFormatter::new(RED_BOLD.into(), &format!("{:.3}", neg));
-        let score_neg_f = EsrFormatter::new(GREEN_BOLD.into(), &format!("+{:.3}", pos));
+    pub fn score_overview(msg: &str, pos: f64, neg: f64) -> TtyString {
+        let score_f = TtyString::new(YELLOW_BOLD(), &format!("{:.3}", pos + neg));
+        let score_pos_f = TtyString::new(RED_BOLD(), &format!("{:.3}", neg));
+        let score_neg_f = TtyString::new(GREEN_BOLD(), &format!("+{:.3}", pos));
 
         let tail = score_f + " (" + score_pos_f + " / " + score_neg_f + ")";
         Self::msg_pair(msg, tail)
     }
 
-    pub fn score_details(msg: &str, table: &[(String, String, String)]) -> EsrFormatter {
+    pub fn score_details(msg: &str, table: &[(String, String, String)]) -> TtyString {
         let msg = format!("|{: ^83}|", msg);
         let frame ="-".repeat(85);
 
-        let sep = || EsrFormatter::new(CYAN_BOLD.into(), "| ");
-        let frame_line = || EsrFormatter::new(CYAN_BOLD.into(), &frame) + "\n";
+        let sep = || TtyString::new(CYAN_BOLD(), "| ");
+        let frame_line = || TtyString::new(CYAN_BOLD(), &frame) + "\n";
 
         let mut score_formatted = "".into();
         score_formatted += frame_line();
-        score_formatted += EsrFormatter::new(CYAN_BOLD.into(), &*msg) + "\n";
+        score_formatted += TtyString::new(CYAN_BOLD(), &*msg) + "\n";
         score_formatted += frame_line();
 
         for line in table {
             if line.1.find("* -").is_some() {
-                score_formatted += sep() + EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + sep();
-                score_formatted += EsrFormatter::new(RED_BOLD.into(), &*line.1) + sep();
-                score_formatted += EsrFormatter::new(RED_BOLD.into(), &format!("{: ^11}", line.2)) + sep() + "\n";
+                score_formatted += sep() + TtyString::new(YELLOW_BOLD(), &*line.0) + sep();
+                score_formatted += TtyString::new(RED_BOLD(), &*line.1) + sep();
+                score_formatted += TtyString::new(RED_BOLD(), &format!("{: ^11}", line.2)) + sep() + "\n";
                 score_formatted += frame_line();
             } else {
-                score_formatted += sep() + EsrFormatter::new(YELLOW_BOLD.into(), &*line.0) + sep();
-                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &*line.1) + sep();
-                score_formatted += EsrFormatter::new(GREEN_BOLD.into(), &format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
+                score_formatted += sep() + TtyString::new(YELLOW_BOLD(), &*line.0) + sep();
+                score_formatted += TtyString::new(GREEN_BOLD(), &*line.1) + sep();
+                score_formatted += TtyString::new(GREEN_BOLD(), &format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
                 score_formatted += frame_line();
             }
         }
@@ -137,44 +136,44 @@ impl EsrPrinter {
         score_formatted
     }
 
-    pub fn crate_no_score(id: &str, e: &EsrError, formatted: bool) {
+    pub fn crate_no_score(id: &str, e: &EsrError) -> TtyString {
         let msg = format!("{}.\nFailed to get scores for crate \"{}\". Maybe it does not exist.", e, id);
-        EsrFormatter::new(RED_BOLD.into(), &msg).println(formatted);
+        TtyString::new(RED_BOLD(), &msg)
     }
 
-    pub fn repo_no_score(repo: &str, e: &EsrError, formatted: bool) {
+    pub fn repo_no_score(repo: &str, e: &EsrError) -> TtyString {
         let msg = format!("{}.\nFailed to get scores for repo \"{}\". Maybe it does not exist.", e, repo);
-        EsrFormatter::new(RED_BOLD.into(), &msg).println(formatted);
+        TtyString::new(RED_BOLD(), &msg)
     }
 
-    pub fn search_no_results(search_pattern: &str, formatted: bool) {
+    pub fn search_no_results(search_pattern: &str) -> TtyString {
         let msg = format!("Searching for \"{}\" returned no results.", search_pattern);
-        EsrFormatter::new(YELLOW_BOLD.into(), &msg).println(formatted);
+        TtyString::new(YELLOW_BOLD(), &msg)
     }
 
-    pub fn search_failed(search_pattern: &str, e: &EsrError, formatted: bool) {
+    pub fn search_failed(search_pattern: &str, e: &EsrError) -> TtyString {
         let msg = format!("{}.\nSearch for \"{}\" failed.", e, search_pattern);
-        EsrFormatter::new(RED_BOLD.into(), &msg).println(formatted);
+        TtyString::new(RED_BOLD(), &msg)
     }
 
-    pub fn limit_out_of_range(limit: usize, min: usize, max: usize, formatted: bool) {
+    pub fn limit_out_of_range(limit: usize, min: usize, max: usize) -> TtyString {
         let msg = format!("{} is out of the range of valid limits. \
                           Please pass a value between {} and {}.", limit, min, max);
-        EsrFormatter::new(YELLOW_BOLD.into(), &msg).println(formatted);
+        TtyString::new(YELLOW_BOLD(), &msg)
     }
 
-    pub fn limit_invalid(limit: &str, formatted: bool) {
+    pub fn limit_invalid(limit: &str) -> TtyString {
         let msg = format!("\"{}\" is an invalid limit value.", limit);
-        EsrFormatter::new(YELLOW_BOLD.into(), &msg).println(formatted);
+        TtyString::new(YELLOW_BOLD(), &msg)
     }
 
-    pub fn no_token(formatted: bool) {
+    pub fn no_token() -> TtyString {
         let msg = "Accessing GitHub's API wothout hitting rate-limits requires providing an access\
                    token.\n\n\
                    You can pass a token via -g/--gh-token option.\n\
                    Or by setting the variable CARGO_ESR_GH_TOKEN in the environment.\n\n\
                    To a acquire an access token, visit: <https://github.com/settings/tokens/new>\n\n\
                    Alternatively, you can pass -o/--crate-only to skip getting repository info.";
-        EsrFormatter::new(YELLOW_BOLD.into(), msg).println(formatted);
+        TtyString::new(YELLOW_BOLD(), msg)
     }
 }

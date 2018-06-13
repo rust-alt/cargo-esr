@@ -12,9 +12,11 @@
 #[macro_use]
 extern crate clap;
 extern crate isatty;
+extern crate tty_string;
 extern crate cargo_esr;
 
 use clap::{App, ArgGroup};
+use tty_string::TtyString;
 
 use cargo_esr::esr_crate::CrateSearch;
 use cargo_esr::esr_score::Scores;
@@ -25,20 +27,20 @@ use std::env;
 const LIMIT_LOW: usize = 5;
 const LIMIT_HIGH: usize = 100;
 
-fn check_limit(limit: &str, formatted: bool) -> usize {
+fn check_limit(limit: &str, print: fn(&TtyString)) -> usize {
     match str::parse::<usize>(limit) {
         Ok(limit_num) => {
             let ll = LIMIT_LOW;
             let lh = LIMIT_HIGH;
             if limit_num < ll || limit_num > lh {
-                EsrPrinter::limit_out_of_range(limit_num, ll, lh, formatted);
+                print(&EsrPrinter::limit_out_of_range(limit_num, ll, lh));
                 std::process::exit(1);
             } else {
                 limit_num
             }
         },
         Err(_) => {
-            EsrPrinter::limit_invalid(limit, formatted);
+            print(&EsrPrinter::limit_invalid(limit));
             std::process::exit(1);
         },
     }
@@ -85,8 +87,14 @@ fn main() {
     let search_by_recent_downloads = m.is_present("search-by-recent-downloads");
     let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
-    let results_limit_num = check_limit(results_limit, formatted);
-    let search_limit_num = check_limit(search_limit, formatted);
+    // Pick print method
+    let print = match formatted {
+        false => TtyString::println_plain,
+        true  => TtyString::println,
+    };
+
+    let results_limit_num = check_limit(results_limit, print);
+    let search_limit_num = check_limit(search_limit, print);
 
     let mut gh_token = String::with_capacity(48);
     if m.value_of("gh-score").is_some() || !crate_only {
@@ -95,7 +103,7 @@ fn main() {
         } else if let Ok(env_token) = std::env::var("CARGO_ESR_GH_TOKEN") {
             gh_token.push_str(&env_token);
         } else {
-            EsrPrinter::no_token(formatted);
+            print(&EsrPrinter::no_token());
             std::process::exit(1);
         }
     }
@@ -103,9 +111,9 @@ fn main() {
     match (m.value_of("gh-score"), m.value_of("score"), m.values_of("search")) {
         (Some(repo_path), _, _)  => {
             match Scores::from_repo_with_token(repo_path, &gh_token) {
-                Ok(repo_scores) => repo_scores.print_detailed_scores(formatted),
+                Ok(repo_scores) => print(&repo_scores.detailed_scores()),
                 Err(ref e) => {
-                    EsrPrinter::repo_no_score(repo_path, e, formatted);
+                    print(&EsrPrinter::repo_no_score(repo_path, e));
                     std::process::exit(1);
                 },
             }
@@ -119,9 +127,9 @@ fn main() {
             };
 
             match crates_scores_res {
-                Ok(crate_scores) => crate_scores.print_detailed_scores(formatted),
+                Ok(crate_scores) => print(&crate_scores.detailed_scores()),
                 Err(ref e) => {
-                    EsrPrinter::crate_no_score(crate_name, e, formatted);
+                    print(&EsrPrinter::crate_no_score(crate_name, e));
                     std::process::exit(1);
                 },
             }
@@ -155,7 +163,7 @@ fn main() {
                     let crates = search.get_crates();
 
                     if crates.is_empty() {
-                        EsrPrinter::search_no_results(&search_str, formatted);
+                        print(&EsrPrinter::search_no_results(&search_str));
                         std::process::exit(1);
                     }
 
@@ -166,14 +174,10 @@ fn main() {
                         repo_only,
                         search_limit_num);
 
-                    Scores::print_search_results(
-                        &*crates_scores_res,
-                        sort_positive,
-                        results_limit_num,
-                        formatted);
+                    print(&Scores::search_results(&*crates_scores_res, sort_positive, results_limit_num));
                 },
                 Err(ref e) => {
-                    EsrPrinter::search_failed(&search_str, e, formatted);
+                    print(&EsrPrinter::search_failed(&search_str, e));
                     std::process::exit(1);
                 }
             }

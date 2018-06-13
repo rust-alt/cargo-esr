@@ -13,7 +13,6 @@ use serde_json;
 use time;
 use regex;
 use reqwest;
-use term;
 
 use std::{fmt, result};
 
@@ -26,7 +25,6 @@ pub enum EsrError {
     SerdeJson(serde_json::Error),
     Regex(regex::Error),
     Reqwest(reqwest::Error),
-    Term(term::Error),
     Other(String),
 }
 
@@ -38,7 +36,6 @@ impl fmt::Display for EsrError {
             EsrError::SerdeJson(ref e) => write!(f, "Deserialization Error: {}", e),
             EsrError::Regex(ref e) => write!(f, "Regex Error: {}", e),
             EsrError::Reqwest(ref e) => write!(f, "Reqwest Error: {}", e),
-            EsrError::Term(ref e) => write!(f, "Term Error: {}", e),
             EsrError::Other(ref e) => write!(f, "Error: {}", e),
         }
     }
@@ -71,12 +68,6 @@ impl From<regex::Error> for EsrError {
 impl From<reqwest::Error> for EsrError {
     fn from(e: reqwest::Error) -> Self {
         EsrError::Reqwest(e)
-    }
-}
-
-impl From<term::Error> for EsrError {
-    fn from(e: term::Error) -> Self {
-        EsrError::Term(e)
     }
 }
 

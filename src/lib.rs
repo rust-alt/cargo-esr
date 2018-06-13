@@ -14,7 +14,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate term;
+extern crate tty_string;
 extern crate serde;
 extern crate serde_json;
 extern crate reqwest;
@@ -31,5 +31,4 @@ pub mod esr_util;
 pub mod esr_crate;
 pub mod esr_github;
 pub mod esr_score;
-pub mod esr_formatter;
 pub mod esr_printer;

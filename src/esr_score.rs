@@ -14,11 +14,12 @@ use pipeliner::Pipeline;
 use esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
 use esr_github::RepoInfoWithScore;
 use esr_printer::EsrPrinter;
-use esr_formatter::EsrFormatter;
+use tty_string::TtyString;
 use esr_util;
 use esr_errors::Result;
 
 use std::f64;
+use std::default::Default;
 
 pub enum Scores {
     CrateAndRepo(CrateInfoWithScore, Result<RepoInfoWithScore>),
@@ -60,7 +61,7 @@ impl Scores {
     }
 
     // ====================
-    fn score_crate(&self) -> EsrFormatter {
+    fn score_crate(&self) -> TtyString {
         match *self {
             Scores::CrateAndRepo(ref cr_score, _) | Scores::CrateOnly(ref cr_score) => {
                 let (pos, neg) = cr_score.get_score_tuple();
@@ -70,7 +71,7 @@ impl Scores {
         }
     }
 
-    fn score_repo(&self) -> EsrFormatter {
+    fn score_repo(&self) -> TtyString {
         match *self {
             Scores::CrateAndRepo (_, Ok(ref repo_score)) | Scores::RepoOnly(ref repo_score) => {
                 let (pos, neg) = repo_score.get_score_tuple();
@@ -81,7 +82,7 @@ impl Scores {
         }
     }
 
-    pub fn print_detailed_scores(&self, formatted: bool) {
+    pub fn detailed_scores(&self) -> TtyString {
         // Unfortunately, `if let` is not as powerful as `match`. So, we have to
         // to do this *_opt dance.
         let cr_score_opt = match *self {
@@ -94,21 +95,22 @@ impl Scores {
             Scores::CrateAndRepo(_, Err(_)) | Scores::CrateOnly(_) => None,
         };
 
+        let mut ret = TtyString::default();
+
         if let Some(cr_score) = cr_score_opt {
             let id = cr_score.get_info().get_id();
-            self.info_pair(id, false).1.println(formatted);
+            ret += self.info_pair(id, false).1 + "\n";
 
             let table = cr_score.get_score_table();
-            EsrPrinter::score_details("Crate Score Details", table).println(formatted);
-            self.score_crate().println(formatted);
+            ret += EsrPrinter::score_details("Crate Score Details", table) + "\n";
         }
 
         if let Some(repo_score) = repo_score_opt {
             let table = repo_score.get_score_table();
-            EsrPrinter::score_details("Repo Score Details", table).println(formatted);
+            ret += EsrPrinter::score_details("Repo Score Details", table) + "\n";
         }
 
-        self.score_repo().println(formatted);
+        ret
     }
 
     // =================
@@ -139,7 +141,7 @@ impl Scores {
         }
     }
 
-    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, EsrFormatter) {
+    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, TtyString) {
         match *self {
             Scores::CrateAndRepo(ref cr_score, _) | Scores::CrateOnly(ref cr_score) => {
                 let cr_info = cr_score.get_info();
@@ -205,7 +207,7 @@ impl Scores {
         }
     }
 
-    pub fn print_search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize, formatted: bool) {
+    pub fn search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize) -> TtyString {
         let mut results_vec = Vec::with_capacity(32);
         for res in results {
             match *res {
@@ -221,9 +223,14 @@ impl Scores {
         // Negation to get scores in reverse.
         // `* 10000.0` to not lose order accuracy after casting.
         results_vec.sort_by_key(|&(sort_score, _)| -(sort_score * 10000.0) as i64);
+
+        let mut ret = TtyString::default();
+
         for (num, result) in results_vec.iter().take(limit).enumerate() {
-            EsrPrinter::id(&format!("({}) ", num + 1)).print(formatted);
-            result.1.println(formatted);
+            ret += EsrPrinter::id(&format!("({}) ", num + 1));
+            ret += result.1.clone() + "\n";
         }
+
+        ret
     }
 }
