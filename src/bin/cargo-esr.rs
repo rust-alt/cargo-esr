@@ -11,12 +11,9 @@
 
 #[macro_use]
 extern crate clap;
-extern crate isatty;
-extern crate tty_string;
 extern crate cargo_esr;
 
 use clap::{App, ArgGroup};
-use tty_string::TtyString;
 
 use cargo_esr::esr_crate::CrateSearch;
 use cargo_esr::esr_score::Scores;
@@ -27,20 +24,20 @@ use std::env;
 const LIMIT_LOW: usize = 5;
 const LIMIT_HIGH: usize = 100;
 
-fn check_limit(limit: &str, print: fn(&TtyString)) -> usize {
+fn check_limit(limit: &str) -> usize {
     match str::parse::<usize>(limit) {
         Ok(limit_num) => {
             let ll = LIMIT_LOW;
             let lh = LIMIT_HIGH;
             if limit_num < ll || limit_num > lh {
-                print(&EsrPrinter::limit_out_of_range(limit_num, ll, lh));
+                EsrPrinter::limit_out_of_range(limit_num, ll, lh).println();
                 std::process::exit(1);
             } else {
                 limit_num
             }
         },
         Err(_) => {
-            print(&EsrPrinter::limit_invalid(limit));
+            EsrPrinter::limit_invalid(limit).println();
             std::process::exit(1);
         },
     }
@@ -81,20 +78,13 @@ fn main() {
     let sort_positive = m.is_present("sort-positive");
     let results_limit = m.value_of("results-limit").unwrap_or("10");
     let search_limit = m.value_of("search-limit").unwrap_or("25");
-    let formatted = isatty::stdout_isatty() && !m.is_present("no-color");
 
     let search_by_relevance = m.is_present("search-by-relevance");
     let search_by_recent_downloads = m.is_present("search-by-recent-downloads");
     let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
-    // Pick print method
-    let print = match formatted {
-        false => TtyString::println_plain,
-        true  => TtyString::println,
-    };
-
-    let results_limit_num = check_limit(results_limit, print);
-    let search_limit_num = check_limit(search_limit, print);
+    let results_limit_num = check_limit(results_limit);
+    let search_limit_num = check_limit(search_limit);
 
     let mut gh_token = String::with_capacity(48);
     if m.value_of("gh-score").is_some() || !crate_only {
@@ -103,7 +93,7 @@ fn main() {
         } else if let Ok(env_token) = std::env::var("CARGO_ESR_GH_TOKEN") {
             gh_token.push_str(&env_token);
         } else {
-            print(&EsrPrinter::no_token());
+            EsrPrinter::no_token().println();
             std::process::exit(1);
         }
     }
@@ -111,9 +101,9 @@ fn main() {
     match (m.value_of("gh-score"), m.value_of("score"), m.values_of("search")) {
         (Some(repo_path), _, _)  => {
             match Scores::from_repo_with_token(repo_path, &gh_token) {
-                Ok(repo_scores) => print(&repo_scores.detailed_scores()),
+                Ok(repo_scores) => repo_scores.detailed_scores().println(),
                 Err(ref e) => {
-                    print(&EsrPrinter::repo_no_score(repo_path, e));
+                    EsrPrinter::repo_no_score(repo_path, e).println();
                     std::process::exit(1);
                 },
             }
@@ -127,9 +117,9 @@ fn main() {
             };
 
             match crates_scores_res {
-                Ok(crate_scores) => print(&crate_scores.detailed_scores()),
+                Ok(crate_scores) => crate_scores.detailed_scores().println(),
                 Err(ref e) => {
-                    print(&EsrPrinter::crate_no_score(crate_name, e));
+                    EsrPrinter::crate_no_score(crate_name, e).println();
                     std::process::exit(1);
                 },
             }
@@ -163,7 +153,7 @@ fn main() {
                     let crates = search.get_crates();
 
                     if crates.is_empty() {
-                        print(&EsrPrinter::search_no_results(&search_str));
+                        EsrPrinter::search_no_results(&search_str).println();
                         std::process::exit(1);
                     }
 
@@ -174,10 +164,10 @@ fn main() {
                         repo_only,
                         search_limit_num);
 
-                    print(&Scores::search_results(&*crates_scores_res, sort_positive, results_limit_num));
+                    Scores::search_results(&*crates_scores_res, sort_positive, results_limit_num).println();
                 },
                 Err(ref e) => {
-                    print(&EsrPrinter::search_failed(&search_str, e));
+                    EsrPrinter::search_failed(&search_str, e).println();
                     std::process::exit(1);
                 }
             }

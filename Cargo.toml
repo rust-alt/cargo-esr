@@ -7,7 +7,6 @@ authors = ["Mohammad AlSaleh <CE.Mohammad.AlSaleh@gmail.com>"]
 [dependencies]
 tty-string = { git = "https://github.com/rust-alt/tty-string.git" }
 clap = {version = "2" , features = ["yaml"]}
-isatty = "0.1"
 time = "0.1"
 pipeliner = "0.1"
 serde = "1"
