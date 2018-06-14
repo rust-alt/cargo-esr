@@ -13,6 +13,7 @@ use esr_errors::{Result, EsrError};
 use tty_string::{TtyString, TtyStyle};
 use tty_string::color as C;
 
+const BOLD : fn() -> TtyStyle = || TtyStyle::bold();
 const RED_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::RED).with_bold();
 const GREEN_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::GREEN).with_bold();
 const BLUE_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::BLUE).with_bold();
@@ -84,10 +85,11 @@ impl EsrPrinter {
     }
 
     pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> TtyString {
+        let pos_sign = || TtyString::new(BOLD(), "+");
         let stable_f = TtyString::new(GREEN_BOLD(), &format!("{}", stable));
         let non_yanked_pre_f = TtyString::new(YELLOW_BOLD(), &format!("{}", non_yanked_pre));
         let yanked_f = TtyString::new(RED_BOLD(), &format!("{}", yanked));
-        stable_f + "+" + non_yanked_pre_f + "+" + yanked_f
+        stable_f + pos_sign() + non_yanked_pre_f + pos_sign() + yanked_f
     }
 
     pub fn score_error(msg: &str) -> TtyString {
@@ -99,11 +101,12 @@ impl EsrPrinter {
     }
 
     pub fn score_overview(msg: &str, pos: f64, neg: f64) -> TtyString {
+        let b = |x| TtyString::new(BOLD(), x);
         let score_f = TtyString::new(YELLOW_BOLD(), &format!("{:.3}", pos + neg));
         let score_pos_f = TtyString::new(RED_BOLD(), &format!("{:.3}", neg));
         let score_neg_f = TtyString::new(GREEN_BOLD(), &format!("+{:.3}", pos));
 
-        let tail = score_f + " (" + score_pos_f + " / " + score_neg_f + ")";
+        let tail = score_f + b(" (") + score_pos_f + b(" / ") + score_neg_f + b(")");
         Self::msg_pair(msg, tail)
     }
 
