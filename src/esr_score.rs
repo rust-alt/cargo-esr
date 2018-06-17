@@ -108,6 +108,11 @@ impl Scores {
         if let Some(repo_score) = repo_score_opt {
             let table = repo_score.get_score_table();
             ret += EsrPrinter::score_details("Repo Score Details", table) + "\n";
+
+            // Print repo score overview if it wasn't already printed
+            if cr_score_opt.is_none() {
+                ret += self.score_repo();
+            }
         }
 
         ret
