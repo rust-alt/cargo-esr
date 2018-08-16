@@ -10,34 +10,34 @@
 */
 
 use esr_errors::{Result, EsrError};
-use tty_string::{TtyString, TtyStyle};
-use tty_string::color as C;
+use term_string::{TermString, TermStyle};
+use term_string::color as C;
 
-const BOLD : fn() -> TtyStyle = || TtyStyle::bold();
-const RED_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::RED).with_bold();
-const GREEN_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::GREEN).with_bold();
-const BLUE_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::BLUE).with_bold();
-const YELLOW_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::YELLOW).with_bold();
-const CYAN_BOLD : fn() -> TtyStyle = || TtyStyle::fg(C::CYAN).with_bold();
+const BOLD : fn() -> TermStyle = || TermStyle::bold();
+const RED_BOLD : fn() -> TermStyle = || TermStyle::fg(C::RED).with_bold();
+const GREEN_BOLD : fn() -> TermStyle = || TermStyle::fg(C::GREEN).with_bold();
+const BLUE_BOLD : fn() -> TermStyle = || TermStyle::fg(C::BLUE).with_bold();
+const YELLOW_BOLD : fn() -> TermStyle = || TermStyle::fg(C::YELLOW).with_bold();
+const CYAN_BOLD : fn() -> TermStyle = || TermStyle::fg(C::CYAN).with_bold();
 
 pub struct EsrPrinter;
 
 impl EsrPrinter {
-    pub fn msg_pair(msg: &str, val: impl Into<TtyString>) -> TtyString {
-        let val_bold = val.into().with_style(TtyStyle::bold());
-        TtyString::new(CYAN_BOLD(), msg) + ": " + val_bold  + "\n "
+    pub fn msg_pair(msg: &str, val: impl Into<TermString>) -> TermString {
+        let val_bold = val.into().with_style(TermStyle::bold());
+        TermString::new(CYAN_BOLD(), msg) + ": " + val_bold  + "\n "
     }
 
-    pub fn id(id: &str) -> TtyString {
-        TtyString::new(BLUE_BOLD(), id)
+    pub fn id(id: &str) -> TermString {
+        TermString::new(BLUE_BOLD(), id)
     }
 
-    pub fn err(val: &str) -> TtyString {
-        TtyString::new(RED_BOLD(), val)
+    pub fn err(val: &str) -> TermString {
+        TermString::new(RED_BOLD(), val)
     }
 
-    pub fn all_yanked() -> TtyString {
-        TtyString::new(RED_BOLD(), "(empty/all yanked)")
+    pub fn all_yanked() -> TermString {
+        TermString::new(RED_BOLD(), "(empty/all yanked)")
     }
 
     pub fn desc(orig_desc: &str) -> String {
@@ -84,54 +84,54 @@ impl EsrPrinter {
         }
     }
 
-    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> TtyString {
-        let pos_sign = || TtyString::new(BOLD(), "+");
-        let stable_f = TtyString::new(GREEN_BOLD(), &format!("{}", stable));
-        let non_yanked_pre_f = TtyString::new(YELLOW_BOLD(), &format!("{}", non_yanked_pre));
-        let yanked_f = TtyString::new(RED_BOLD(), &format!("{}", yanked));
+    pub fn releases(stable: usize, non_yanked_pre: usize, yanked: usize) -> TermString {
+        let pos_sign = || TermString::new(BOLD(), "+");
+        let stable_f = TermString::new(GREEN_BOLD(), format!("{}", stable));
+        let non_yanked_pre_f = TermString::new(YELLOW_BOLD(), format!("{}", non_yanked_pre));
+        let yanked_f = TermString::new(RED_BOLD(), format!("{}", yanked));
         stable_f + pos_sign() + non_yanked_pre_f + pos_sign() + yanked_f
     }
 
-    pub fn score_error(msg: &str) -> TtyString {
-        TtyString::new(RED_BOLD(), msg) + ": " + TtyString::new(TtyStyle::bold(), "Error") + "\n "
+    pub fn score_error(msg: &str) -> TermString {
+        TermString::new(RED_BOLD(), msg) + ": " + TermString::new(TermStyle::bold(), "Error") + "\n "
     }
 
-    pub fn score_na(msg: &str) -> TtyString {
+    pub fn score_na(msg: &str) -> TermString {
         Self::msg_pair(msg, "N/A")
     }
 
-    pub fn score_overview(msg: &str, pos: f64, neg: f64) -> TtyString {
-        let b = |x| TtyString::new(BOLD(), x);
-        let score_f = TtyString::new(YELLOW_BOLD(), &format!("{:.3}", pos + neg));
-        let score_pos_f = TtyString::new(RED_BOLD(), &format!("{:.3}", neg));
-        let score_neg_f = TtyString::new(GREEN_BOLD(), &format!("+{:.3}", pos));
+    pub fn score_overview(msg: &str, pos: f64, neg: f64) -> TermString {
+        let b = |x| TermString::new(BOLD(), x);
+        let score_f = TermString::new(YELLOW_BOLD(), format!("{:.3}", pos + neg));
+        let score_pos_f = TermString::new(RED_BOLD(), format!("{:.3}", neg));
+        let score_neg_f = TermString::new(GREEN_BOLD(), format!("+{:.3}", pos));
 
         let tail = score_f + b(" (") + score_pos_f + b(" / ") + score_neg_f + b(")");
         Self::msg_pair(msg, tail)
     }
 
-    pub fn score_details(msg: &str, table: &[(String, String, String)]) -> TtyString {
+    pub fn score_details(msg: &str, table: &[(String, String, String)]) -> TermString {
         let msg = format!("|{: ^83}|", msg);
         let frame ="-".repeat(85);
 
-        let sep = || TtyString::new(CYAN_BOLD(), "| ");
-        let frame_line = || TtyString::new(CYAN_BOLD(), &frame) + "\n";
+        let sep = || TermString::new(CYAN_BOLD(), "| ");
+        let frame_line = || TermString::new(CYAN_BOLD(), &*frame) + "\n";
 
         let mut score_formatted = "".into();
         score_formatted += frame_line();
-        score_formatted += TtyString::new(CYAN_BOLD(), &*msg) + "\n";
+        score_formatted += TermString::new(CYAN_BOLD(), &*msg) + "\n";
         score_formatted += frame_line();
 
         for line in table {
             if line.1.find("* -").is_some() {
-                score_formatted += sep() + TtyString::new(YELLOW_BOLD(), &*line.0) + sep();
-                score_formatted += TtyString::new(RED_BOLD(), &*line.1) + sep();
-                score_formatted += TtyString::new(RED_BOLD(), &format!("{: ^11}", line.2)) + sep() + "\n";
+                score_formatted += sep() + TermString::new(YELLOW_BOLD(), &*line.0) + sep();
+                score_formatted += TermString::new(RED_BOLD(), &*line.1) + sep();
+                score_formatted += TermString::new(RED_BOLD(), format!("{: ^11}", line.2)) + sep() + "\n";
                 score_formatted += frame_line();
             } else {
-                score_formatted += sep() + TtyString::new(YELLOW_BOLD(), &*line.0) + sep();
-                score_formatted += TtyString::new(GREEN_BOLD(), &*line.1) + sep();
-                score_formatted += TtyString::new(GREEN_BOLD(), &format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
+                score_formatted += sep() + TermString::new(YELLOW_BOLD(), &*line.0) + sep();
+                score_formatted += TermString::new(GREEN_BOLD(), &*line.1) + sep();
+                score_formatted += TermString::new(GREEN_BOLD(), format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
                 score_formatted += frame_line();
             }
         }
@@ -139,44 +139,44 @@ impl EsrPrinter {
         score_formatted
     }
 
-    pub fn crate_no_score(id: &str, e: &EsrError) -> TtyString {
+    pub fn crate_no_score(id: &str, e: &EsrError) -> TermString {
         let msg = format!("{}.\nFailed to get scores for crate \"{}\". Maybe it does not exist.", e, id);
-        TtyString::new(RED_BOLD(), &msg)
+        TermString::new(RED_BOLD(), msg)
     }
 
-    pub fn repo_no_score(repo: &str, e: &EsrError) -> TtyString {
+    pub fn repo_no_score(repo: &str, e: &EsrError) -> TermString {
         let msg = format!("{}.\nFailed to get scores for repo \"{}\". Maybe it does not exist.", e, repo);
-        TtyString::new(RED_BOLD(), &msg)
+        TermString::new(RED_BOLD(), msg)
     }
 
-    pub fn search_no_results(search_pattern: &str) -> TtyString {
+    pub fn search_no_results(search_pattern: &str) -> TermString {
         let msg = format!("Searching for \"{}\" returned no results.", search_pattern);
-        TtyString::new(YELLOW_BOLD(), &msg)
+        TermString::new(YELLOW_BOLD(), msg)
     }
 
-    pub fn search_failed(search_pattern: &str, e: &EsrError) -> TtyString {
+    pub fn search_failed(search_pattern: &str, e: &EsrError) -> TermString {
         let msg = format!("{}.\nSearch for \"{}\" failed.", e, search_pattern);
-        TtyString::new(RED_BOLD(), &msg)
+        TermString::new(RED_BOLD(), msg)
     }
 
-    pub fn limit_out_of_range(limit: usize, min: usize, max: usize) -> TtyString {
+    pub fn limit_out_of_range(limit: usize, min: usize, max: usize) -> TermString {
         let msg = format!("{} is out of the range of valid limits. \
                           Please pass a value between {} and {}.", limit, min, max);
-        TtyString::new(YELLOW_BOLD(), &msg)
+        TermString::new(YELLOW_BOLD(), msg)
     }
 
-    pub fn limit_invalid(limit: &str) -> TtyString {
+    pub fn limit_invalid(limit: &str) -> TermString {
         let msg = format!("\"{}\" is an invalid limit value.", limit);
-        TtyString::new(YELLOW_BOLD(), &msg)
+        TermString::new(YELLOW_BOLD(), msg)
     }
 
-    pub fn no_token() -> TtyString {
+    pub fn no_token() -> TermString {
         let msg = "Accessing GitHub's API wothout hitting rate-limits requires providing an access\
                    token.\n\n\
                    You can pass a token via -g/--gh-token option.\n\
                    Or by setting the variable CARGO_ESR_GH_TOKEN in the environment.\n\n\
                    To a acquire an access token, visit: <https://github.com/settings/tokens/new>\n\n\
                    Alternatively, you can pass -o/--crate-only to skip getting repository info.";
-        TtyString::new(YELLOW_BOLD(), msg)
+        TermString::new(YELLOW_BOLD(), msg)
     }
 }

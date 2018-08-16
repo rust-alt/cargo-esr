@@ -14,7 +14,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate tty_string;
+extern crate term_string;
 extern crate serde;
 extern crate serde_json;
 extern crate reqwest;

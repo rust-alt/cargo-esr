@@ -14,7 +14,7 @@ use pipeliner::Pipeline;
 use esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
 use esr_github::RepoInfoWithScore;
 use esr_printer::EsrPrinter;
-use tty_string::TtyString;
+use term_string::TermString;
 use esr_util;
 use esr_errors::Result;
 
@@ -61,7 +61,7 @@ impl Scores {
     }
 
     // ====================
-    fn score_crate(&self) -> TtyString {
+    fn score_crate(&self) -> TermString {
         match *self {
             Scores::CrateAndRepo(ref cr_score, _) | Scores::CrateOnly(ref cr_score) => {
                 let (pos, neg) = cr_score.get_score_tuple();
@@ -71,7 +71,7 @@ impl Scores {
         }
     }
 
-    fn score_repo(&self) -> TtyString {
+    fn score_repo(&self) -> TermString {
         match *self {
             Scores::CrateAndRepo (_, Ok(ref repo_score)) | Scores::RepoOnly(ref repo_score) => {
                 let (pos, neg) = repo_score.get_score_tuple();
@@ -82,7 +82,7 @@ impl Scores {
         }
     }
 
-    pub fn detailed_scores(&self) -> TtyString {
+    pub fn detailed_scores(&self) -> TermString {
         // Unfortunately, `if let` is not as powerful as `match`. So, we have to
         // to do this *_opt dance.
         let cr_score_opt = match *self {
@@ -95,7 +95,7 @@ impl Scores {
             Scores::CrateAndRepo(_, Err(_)) | Scores::CrateOnly(_) => None,
         };
 
-        let mut ret = TtyString::default();
+        let mut ret = TermString::default();
 
         if let Some(cr_score) = cr_score_opt {
             let id = cr_score.get_info().get_id();
@@ -146,7 +146,7 @@ impl Scores {
         }
     }
 
-    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, TtyString) {
+    fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, TermString) {
         match *self {
             Scores::CrateAndRepo(ref cr_score, _) | Scores::CrateOnly(ref cr_score) => {
                 let cr_info = cr_score.get_info();
@@ -212,7 +212,7 @@ impl Scores {
         }
     }
 
-    pub fn search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize) -> TtyString {
+    pub fn search_results(results: &[(String, Result<Self>)], sort_positive: bool, limit: usize) -> TermString {
         let mut results_vec = Vec::with_capacity(32);
         for res in results {
             match *res {
@@ -229,7 +229,7 @@ impl Scores {
         // `* 10000.0` to not lose order accuracy after casting.
         results_vec.sort_by_key(|&(sort_score, _)| -(sort_score * 10000.0) as i64);
 
-        let mut ret = TtyString::default();
+        let mut ret = TermString::default();
 
         for (num, result) in results_vec.iter().take(limit).enumerate() {
             ret += EsrPrinter::id(&format!("({}) ", num + 1));

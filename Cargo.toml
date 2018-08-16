@@ -5,7 +5,7 @@ license = "MPL 2.0"
 authors = ["Mohammad AlSaleh <CE.Mohammad.AlSaleh@gmail.com>"]
 
 [dependencies]
-tty-string = { git = "https://github.com/rust-alt/tty-string.git" }
+term-string = { git = "https://github.com/rust-alt/term-string.git" }
 clap = {version = "2" , features = ["yaml"]}
 time = "0.1"
 pipeliner = "0.1"
