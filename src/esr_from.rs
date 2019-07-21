@@ -13,7 +13,6 @@ use serde_json;
 use serde::de::DeserializeOwned;
 
 use reqwest::Client;
-use reqwest::header::UserAgent;
 
 use pipeliner::Pipeline;
 
@@ -108,7 +107,7 @@ pub trait EsrFrom: Sized + DeserializeOwned {
 
         // Creating an outgoing request.
         let mut resp = client.get(url)
-            .header(UserAgent::new("cargo-esr/0.1"))
+            .header("user-agent", "cargo-esr/0.1")
             .send()?;
 
         // Read the Response.
