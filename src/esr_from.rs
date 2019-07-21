@@ -17,9 +17,13 @@ use reqwest::Client;
 use pipeliner::Pipeline;
 
 use std::io::Read;
-use std::collections::HashMap;
 
 use esr_errors::Result;
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Meta {
+    total: usize,
+}
 
 pub trait EsrFromMulti: EsrFrom + Send + 'static {
     type Inner: Clone;
@@ -29,7 +33,7 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
         let url = url.to_string();
 
         let mut initial_self = Self::from_url(&url)?;
-        let total = initial_self.total_from_meta()?;
+        let total = initial_self.total_from_meta();
 
         // per_page=100 is the maximum number allowed.
         // If total > 100, GET all pages and append all results to initial_self inner vec
@@ -69,12 +73,11 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
         Ok(initial_self)
     }
 
-    fn total_from_meta(&self) -> Result<usize> {
-        let num = self.get_meta().get("total").ok_or("total num of dependants missing")?;
-        Ok(*num)
+    fn total_from_meta(&self) -> usize {
+        self.get_meta().total
     }
 
-    fn get_meta(&self) -> &HashMap<String, usize>;
+    fn get_meta(&self) -> &Meta;
     fn get_inner(&self) -> &Vec<Self::Inner>;
     fn get_inner_mut(&mut self) -> &mut Vec<Self::Inner>;
 

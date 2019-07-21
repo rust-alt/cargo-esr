@@ -12,11 +12,9 @@
 use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
 
-use std::collections::HashMap;
-
 use esr_errors::Result;
 use esr_util;
-use esr_from::{EsrFrom, DefEsrFrom, EsrFromMulti};
+use esr_from::{Meta, EsrFrom, DefEsrFrom, EsrFromMulti};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CrateGeneralInfo {
@@ -97,14 +95,14 @@ struct CrateDependants {
     dependants: Vec<DependantInfo>,
     #[serde(rename = "versions")]
     names: Vec<DependantName>,
-    meta: HashMap<String, usize>,
+    meta: Meta,
 }
 
 impl EsrFromMulti for CrateDependants {
     type Inner = DependantInfo;
     type Inner2 = DependantName;
 
-    fn get_meta(&self) -> &HashMap<String, usize> {
+    fn get_meta(&self) -> &Meta {
         &self.meta
     }
 
@@ -543,14 +541,14 @@ impl CrateInfoWithScore {
 #[derive(Deserialize, Debug)]
 pub struct CrateSearch {
     crates: Vec<CrateGeneralInfo>,
-    meta: HashMap<String, usize>,
+    meta: Meta,
 }
 
 impl EsrFromMulti for CrateSearch {
     type Inner = CrateGeneralInfo;
     type Inner2 = ();
 
-    fn get_meta(&self) -> &HashMap<String, usize> {
+    fn get_meta(&self) -> &Meta {
         &self.meta
     }
 
