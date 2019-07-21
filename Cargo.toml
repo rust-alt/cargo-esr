@@ -8,7 +8,7 @@ authors = ["Mohammad AlSaleh <CE.Mohammad.AlSaleh@gmail.com>"]
 term-string = { git = "https://github.com/rust-alt/term-string.git" }
 clap = {version = "2" , features = ["yaml"]}
 time = "0.1"
-pipeliner = "0.1"
+pipeliner = "1.0"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"

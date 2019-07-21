@@ -99,24 +99,21 @@ impl RepoInfo {
             RepoContributors::url_from_id_and_token(id, token),
         ];
 
-        // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
-        let bytes = urls
+        let mut bytes_iter = urls
             .into_iter()
-            .enumerate()
             .with_threads(4)
-            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)))
-            .collect::<Result<Vec<_>>>()?;
+            .ordered_map(|url| DefEsrFrom::bytes_from_url(&url));
 
-        let &(_, ref bytes_general) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
-        let &(_, ref bytes_closed_issues) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
-        let &(_, ref bytes_pulls) = bytes.iter().find(|&&(idx,_)| idx == 2).ok_or("impossible")?;
-        let &(_, ref bytes_contributors) = bytes.iter().find(|&&(idx,_)| idx == 3).ok_or("impossible")?;
+        let bytes_general = bytes_iter.next().expect("impossible")?;
+        let bytes_closed_issues = bytes_iter.next().expect("impossible")?;
+        let bytes_pulls = bytes_iter.next().expect("impossible")?;
+        let bytes_contributors = bytes_iter.next().expect("impossible")?;
 
         Ok(Self {
-            general_info: RepoGeneralInfo::from_bytes(bytes_general)?,
-            last_100_closed_issues: RepoClosedIssues::from_bytes(bytes_closed_issues)?,
-            last_100_pull_requests: RepoPullRequests::from_bytes(bytes_pulls)?,
-            top_100_contributors: RepoContributors::from_bytes(bytes_contributors)?,
+            general_info: RepoGeneralInfo::from_bytes(&*bytes_general)?,
+            last_100_closed_issues: RepoClosedIssues::from_bytes(&*bytes_closed_issues)?,
+            last_100_pull_requests: RepoPullRequests::from_bytes(&*bytes_pulls)?,
+            top_100_contributors: RepoContributors::from_bytes(&*bytes_contributors)?,
         })
     }
 }

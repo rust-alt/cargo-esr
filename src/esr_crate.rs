@@ -285,25 +285,20 @@ impl CrateInfo {
             //CrateDependants::url_from_id(id),
         ];
 
-        // `.with_threads()` does not guarantee order. So, we use `.enumerate()` as an indexer
-        let bytes_iter_res = urls
+        let mut bytes_iter  = urls
             .into_iter()
-            .enumerate()
             .with_threads(2)
-            .map(|(idx, url)| DefEsrFrom::bytes_from_url(&url).map(|bytes| (idx, bytes)));
+            .ordered_map(|url| DefEsrFrom::bytes_from_url(&url));
 
         // We do this before collect()ing the pipe-lined iter to save time
         let dependants = CrateDependants::from_id(id)?;
 
-        // collect() and check for errors
-        let bytes = bytes_iter_res.collect::<Result<Vec<_>>>()?;
-
-        let &(_, ref bytes_self) = bytes.iter().find(|&&(idx,_)| idx == 0).ok_or("impossible")?;
-        let &(_, ref bytes_owners) = bytes.iter().find(|&&(idx,_)| idx == 1).ok_or("impossible")?;
+        let bytes_self = bytes_iter.next().expect("impossible")?;
+        let bytes_owners = bytes_iter.next().expect("impossible")?;
 
         Ok(Self {
-            self_info: CrateSelfInfo::from_bytes(bytes_self)?,
-            owners: CrateOwners::from_bytes(bytes_owners)?,
+            self_info: CrateSelfInfo::from_bytes(&*bytes_self)?,
+            owners: CrateOwners::from_bytes(&*bytes_owners)?,
             dependants,
         })
     }
@@ -385,16 +380,11 @@ impl CrateScoreInfo {
             .map(|user| format!("user_id={}", user.id))
             .collect();
 
-        // Returns first error or a Vec
-        // Tip from: https://users.rust-lang.org/t/handling-errors-from-iterators/2551/6
-        let owners_crates: Result<Vec<CrateSearch>> = owners_ids
+        let owners_crates = owners_ids
             .into_iter()
             .with_threads(4)
             .map(|id| CrateSearch::from_id(&id))
-            .collect();
-
-        // QUIZ: Make this work without this `let`. And without `for`,`while`,etc.
-        let owners_crates = owners_crates?;
+            .collect::<Result<Vec<_>>>()?;
 
         let owners_crates_flat: Vec<_> = owners_crates.iter()
             .flat_map(|search| search.crates.iter())
