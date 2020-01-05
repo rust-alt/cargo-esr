@@ -3,16 +3,19 @@ name = "cargo-esr"
 version = "0.4.0"
 license = "MPL 2.0"
 authors = ["Mohammad AlSaleh <CE.Mohammad.AlSaleh@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 term-string = { git = "https://github.com/rust-alt/term-string.git" }
 clap = {version = "2" , features = ["yaml"]}
 time = "0.1"
-pipeliner = "1.0"
-serde = "1"
-serde_derive = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 semver = "0.9"
 regex = "1"
 lazy_static = "1"
-reqwest = "0.9"
+reqwest = { version = "0.10", features = ["gzip"] }
+bytes = "0.5"
+tokio = { version = "0.2", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"

@@ -9,11 +9,6 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use serde_json;
-use time;
-use regex;
-use reqwest;
-
 use std::{fmt, result};
 
 pub type Result<T> = result::Result<T, EsrError>;
@@ -25,6 +20,7 @@ pub enum EsrError {
     SerdeJson(serde_json::Error),
     Regex(regex::Error),
     Reqwest(reqwest::Error),
+    TokioTaskJoin(tokio::task::JoinError),
     Other(String),
 }
 
@@ -36,6 +32,7 @@ impl fmt::Display for EsrError {
             EsrError::SerdeJson(ref e) => write!(f, "Deserialization Error: {}", e),
             EsrError::Regex(ref e) => write!(f, "Regex Error: {}", e),
             EsrError::Reqwest(ref e) => write!(f, "Reqwest Error: {}", e),
+            EsrError::TokioTaskJoin(ref e) => write!(f, "tokio task join Error: {}", e),
             EsrError::Other(ref e) => write!(f, "Error: {}", e),
         }
     }
@@ -62,6 +59,12 @@ impl From<serde_json::Error> for EsrError {
 impl From<regex::Error> for EsrError {
     fn from(e: regex::Error) -> Self {
         EsrError::Regex(e)
+    }
+}
+
+impl From<tokio::task::JoinError> for EsrError {
+    fn from(e: tokio::task::JoinError) -> Self {
+        EsrError::TokioTaskJoin(e)
     }
 }
 

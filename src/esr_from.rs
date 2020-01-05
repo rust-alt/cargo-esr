@@ -9,30 +9,26 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use serde_json;
-use serde::de::DeserializeOwned;
-
+use serde::{Deserialize, de::DeserializeOwned};
 use reqwest::Client;
+use bytes::Bytes;
+use async_trait::async_trait;
+use futures::future;
 
-use pipeliner::Pipeline;
-
-use std::io::Read;
-
-use esr_errors::Result;
+use crate::esr_errors::Result;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Meta {
     total: usize,
 }
 
-pub trait EsrFromMulti: EsrFrom + Send + 'static {
+#[async_trait]
+pub trait EsrFromMulti: EsrFrom + Sync + Send + 'static {
     type Inner: Clone;
     type Inner2: Clone;
 
-    fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
-        let url = url.to_string();
-
-        let mut initial_self = Self::from_url(&url)?;
+    async fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
+        let mut initial_self = Self::from_url(url).await?;
         let total = initial_self.total_from_meta();
 
         // per_page=100 is the maximum number allowed.
@@ -40,13 +36,12 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
         if multi_page && total > 100 {
             let num_pages = (total as f64 / 100.0).ceil() as usize;
 
-            // with_threads() is provided by the pipeliner::Pipeline trait
-            let more_pages = (2..=num_pages)
-                .map(move |page| url.clone() + &format!("&page={}", page))
-                .with_threads(8)
-                .map(|page_url| Self::from_url(&page_url));
+            let more_pages_iter = (2..=num_pages)
+                .map(|page| url.to_owned() + &format!("&page={}", page))
+                .map(|page_url| Self::from_url_owned(page_url));
 
-            for page_res in more_pages {
+
+            for page_res in future::join_all(more_pages_iter).await {
                 let page = page_res?;
                 initial_self.get_inner_mut().extend_from_slice(&*page.get_inner());
 
@@ -73,6 +68,11 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
         Ok(initial_self)
     }
 
+    // Owned arguments variants to allow use in task::spawn
+    async fn from_url_multi_owned(url: String, multi_page: bool) -> Result<Self> {
+        Self::from_url_multi(&*url, multi_page).await
+    }
+
     fn total_from_meta(&self) -> usize {
         self.get_meta().total
     }
@@ -90,7 +90,8 @@ pub trait EsrFromMulti: EsrFrom + Send + 'static {
     }
 }
 
-pub trait EsrFrom: Sized + DeserializeOwned {
+#[async_trait]
+pub trait EsrFrom: Sized + Sync + Send + DeserializeOwned {
     // url=id by default
     fn url_from_id(id: &str) -> String {
         String::from(id)
@@ -105,26 +106,26 @@ pub trait EsrFrom: Sized + DeserializeOwned {
         }
     }
 
-    fn bytes_from_url(url: &str) -> Result<Vec<u8>> {
+    async fn bytes_from_url(url: &str) -> Result<Bytes> {
         let client = Client::builder().build()?;
 
         // Creating an outgoing request.
-        let mut resp = client.get(url)
+        let ret = client.get(url)
             .header("user-agent", "cargo-esr/0.1")
-            .send()?;
+            .send()
+            .await?
+            .bytes()
+            .await?;
 
-        // Read the Response.
-        let mut buf = Vec::with_capacity(256 * 1024);
-        resp.read_to_end(&mut buf)?;
-        Ok(buf)
+        Ok(ret)
     }
 
-    fn bytes_from_id(id: &str) -> Result<Vec<u8>> {
-        Self::bytes_from_url(&Self::url_from_id(id))
+    async fn bytes_from_id(id: &str) -> Result<Bytes> {
+        Self::bytes_from_url(&*Self::url_from_id(id)).await
     }
 
-    fn bytes_from_id_with_token(id: &str, token: &str) -> Result<Vec<u8>> {
-        Self::bytes_from_url(&Self::url_from_id_and_token(id, token))
+    async fn bytes_from_id_with_token(id: &str, token: &str) -> Result<Bytes> {
+        Self::bytes_from_url(&*Self::url_from_id_and_token(id, token)).await
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
@@ -133,20 +134,29 @@ pub trait EsrFrom: Sized + DeserializeOwned {
         Ok(info)
     }
 
-    fn from_url(url: &str) -> Result<Self> {
-        let bytes = Self::bytes_from_url(url)?;
+    async fn from_url(url: &str) -> Result<Self> {
+        let bytes = Self::bytes_from_url(url).await?;
         Self::from_bytes(&*bytes)
     }
 
-    fn from_id(id: &str) -> Result<Self> {
-        Self::from_url(&Self::url_from_id(id))
+    async fn from_id(id: &str) -> Result<Self> {
+        Self::from_url(&*Self::url_from_id(id)).await
     }
 
-    fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
-        Self::from_url(&Self::url_from_id_and_token(id, token))
+    async fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
+        Self::from_url(&*Self::url_from_id_and_token(id, token)).await
+    }
+
+    // Owned arguments variants to allow use in task::spawn
+    async fn from_url_owned(url: String) -> Result<Self> {
+        Self::from_url(&*url).await
+    }
+
+    async fn from_id_owned(id: String) -> Result<Self> {
+        Self::from_id(&*id).await
+    }
+
+    async fn from_id_with_token_owned(id: String, token: String) -> Result<Self> {
+        Self::from_id_with_token(&*id, &*token).await
     }
 }
-
-#[derive(Deserialize)]
-pub struct DefEsrFrom;
-impl EsrFrom for DefEsrFrom {}

@@ -9,14 +9,14 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use pipeliner::Pipeline;
+use crate::esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
+use crate::esr_github::RepoInfoWithScore;
+use crate::esr_printer::EsrPrinter;
+use crate::esr_util;
+use crate::esr_errors::Result;
 
-use esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
-use esr_github::RepoInfoWithScore;
-use esr_printer::EsrPrinter;
 use term_string::TermString;
-use esr_util;
-use esr_errors::Result;
+use tokio::task;
 
 use std::f64;
 use std::default::Default;
@@ -28,34 +28,34 @@ pub enum Scores {
 }
 
 impl Scores {
-    pub fn from_id_with_token(id: &str, gh_token: &str) -> Result<Self> {
-        let cr_score = CrateInfoWithScore::from_id(id)?;
+    pub async fn from_id_with_token(id: String, gh_token: String) -> Result<Self> {
+        let cr_score = CrateInfoWithScore::from_id(id).await?;
         let repo_score_res = cr_score.get_info().github_id()
             .ok_or("Failed to get GitHub id")
-            .map(|gh_id| RepoInfoWithScore::from_id_with_token(&gh_id, gh_token));
+            .map(|gh_id| RepoInfoWithScore::from_id_with_token(gh_id, gh_token));
 
         match repo_score_res {
-            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score)),
+            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score.await)),
             Err(_) => Ok(Scores::CrateOnly(cr_score)),
         }
     }
 
-    pub fn from_id_crate_only(id: &str) -> Result<Self> {
-        let cr_score = CrateInfoWithScore::from_id(id)?;
+    pub async fn from_id_crate_only(id: String) -> Result<Self> {
+        let cr_score = CrateInfoWithScore::from_id(id).await?;
         Ok(Scores::CrateOnly(cr_score))
     }
 
-    pub fn from_id_with_token_repo_only(id: &str, gh_token: &str) -> Result<Self> {
-        let cr_score = CrateInfoWithScore::from_id(id)?;
+    pub async fn from_id_with_token_repo_only(id: String, gh_token: String) -> Result<Self> {
+        let cr_score = CrateInfoWithScore::from_id(id).await?;
         let gh_id = cr_score.get_info().github_id().ok_or("repo-only score requested but failed to get GitHub id")?;
-        let repo_score = RepoInfoWithScore::from_id_with_token(&gh_id, gh_token)?;
+        let repo_score = RepoInfoWithScore::from_id_with_token(gh_id, gh_token).await?;
 
         Ok(Scores::RepoOnly(repo_score))
     }
 
-    pub fn from_repo_with_token(repo: &str, gh_token: &str) -> Result<Self> {
-        let gh_id = esr_util::github_repo(repo).ok_or("repo score requested but failed to get a valid GitHub repo path")?;
-        let repo_score = RepoInfoWithScore::from_id_with_token(&gh_id, gh_token)?;
+    pub async fn from_repo_with_token(repo: String, gh_token: String) -> Result<Self> {
+        let gh_id = esr_util::github_repo(&*repo).ok_or("repo score requested but failed to get a valid GitHub repo path")?;
+        let repo_score = RepoInfoWithScore::from_id_with_token(gh_id, gh_token).await?;
 
         Ok(Scores::RepoOnly(repo_score))
     }
@@ -120,30 +120,35 @@ impl Scores {
 
     // =================
 
-    pub fn collect_scores(crates: &[CrateGeneralInfo], token: &str,
+    pub async fn collect_scores(crates: &[CrateGeneralInfo], token: &str,
                           crate_only: bool,
-                          repo_only: bool,
-                          limit: usize) -> Vec<(String, Result<Self>)> {
-        let id_token_pair: Vec<_> = crates.iter()
-            .map(|cr| (String::from(cr.get_id()), String::from(token)))
-            .collect();
+                          repo_only: bool) -> Result<Vec<(String, Result<Self>)>> {
 
-        if crate_only {
-            id_token_pair.into_iter()
-                .with_threads(limit)
-                .map(move |(id, _)| (id.clone(), Scores::from_id_crate_only(&id)))
-                .collect()
+        let task_iter = if crate_only {
+            crates
+                .iter()
+                .map(|cr| String::from(cr.get_id()))
+                .map(|id| task::spawn(async { (id.clone(), Scores::from_id_crate_only(id).await) }))
+                .collect::<Vec<_>>()
+
         } else if repo_only {
-            id_token_pair.into_iter()
-                .with_threads(limit)
-                .map(move |(id, token)| (id.clone(), Scores::from_id_with_token_repo_only(&id, &token)))
-                .collect()
+            crates
+                .iter()
+                .map(|cr| (String::from(cr.get_id()), String::from(token)))
+                .map(|(id, token)| task::spawn(async { (id.clone(), Scores::from_id_with_token_repo_only(id, token).await) }))
+                .collect::<Vec<_>>()
         } else {
-            id_token_pair.into_iter()
-                .with_threads(limit)
-                .map(move |(id, token)| (id.clone(), Scores::from_id_with_token(&id, &token)))
-                .collect()
-        }
+            crates
+                .iter()
+                .map(|cr| (String::from(cr.get_id()), String::from(token)))
+                .map(|(id, token)| task::spawn(async { (id.clone(), Scores::from_id_with_token(id, token).await) }))
+                .collect::<Vec<_>>()
+        };
+
+        futures::future::join_all(task_iter).await
+            .into_iter()
+            .map(|res| res.map_err(|e| e.into()))
+            .collect::<Result<Vec<_>>>()
     }
 
     fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, TermString) {

@@ -9,11 +9,8 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-#[macro_use]
-extern crate clap;
-extern crate cargo_esr;
-
 use clap::{App, ArgGroup};
+use clap::load_yaml;
 
 use cargo_esr::esr_crate::CrateSearch;
 use cargo_esr::esr_score::Scores;
@@ -43,7 +40,9 @@ fn check_limit(limit: &str) -> usize {
     }
 }
 
-fn main() {
+
+
+async fn run() {
     // clap
     let mut args: Vec<_> = env::args().collect();
 
@@ -84,7 +83,7 @@ fn main() {
     let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
     let results_limit_num = check_limit(results_limit);
-    let search_limit_num = check_limit(search_limit);
+    let _search_limit_num = check_limit(search_limit);
 
     let mut gh_token = String::with_capacity(48);
     if m.value_of("gh-score").is_some() || !crate_only {
@@ -100,7 +99,7 @@ fn main() {
 
     match (m.value_of("gh-score"), m.value_of("score"), m.values_of("search")) {
         (Some(repo_path), _, _)  => {
-            match Scores::from_repo_with_token(repo_path, &gh_token) {
+            match Scores::from_repo_with_token(repo_path.into(), gh_token).await {
                 Ok(repo_scores) => repo_scores.detailed_scores().println(),
                 Err(ref e) => {
                     EsrPrinter::repo_no_score(repo_path, e).println();
@@ -110,9 +109,9 @@ fn main() {
         },
         (_, Some(crate_name), _) => {
             let crates_scores_res = match (crate_only, repo_only) {
-                (false, false) => Scores::from_id_with_token(crate_name, &gh_token),
-                (true, false)  => Scores::from_id_crate_only(crate_name),
-                (false, true)  => Scores::from_id_with_token_repo_only(crate_name, &gh_token),
+                (false, false) => Scores::from_id_with_token(crate_name.into(), gh_token).await,
+                (true, false)  => Scores::from_id_crate_only(crate_name.into()).await,
+                (false, true)  => Scores::from_id_with_token_repo_only(crate_name.into(), gh_token).await,
                 (true, true)   => unreachable!(),
             };
 
@@ -129,7 +128,7 @@ fn main() {
             let search_str = search_pattern.fold(String::with_capacity(128), |s, p| s + p + "+")
                 // In case a multi-word search is quoted
                 .replace(' ', "+")
-                .trim_right_matches('+')
+                .trim_end_matches('+')
                 .to_string();
 
             let search_args = match search_str.is_empty() {
@@ -148,7 +147,7 @@ fn main() {
 
             };
 
-            match CrateSearch::from_id_single_page(&search_args) {
+            match CrateSearch::from_id_single_page(&search_args).await {
                 Ok(search) => {
                     let crates = search.get_crates();
 
@@ -157,12 +156,18 @@ fn main() {
                         std::process::exit(1);
                     }
 
-                    let crates_scores_res = Scores::collect_scores(
+                    let crates_scores_res = match Scores::collect_scores(
                         crates,
                         &gh_token,
                         crate_only,
-                        repo_only,
-                        search_limit_num);
+                        repo_only)
+                        .await {
+                            Ok(res) => res,
+                            Err(_) => {
+                                EsrPrinter::err("A tokio task or more returned errors.");
+                                std::process::exit(1);
+                            },
+                    };
 
                     Scores::search_results(&*crates_scores_res, sort_positive, results_limit_num).println();
                 },
@@ -174,5 +179,24 @@ fn main() {
         },
 
         (_, _, _) => unreachable!(),
+    }
+}
+
+fn main() {
+
+    // build runtime
+    let runtime_res = tokio::runtime::Builder::new()
+        .enable_all()
+        //.basic_scheduler()
+        .threaded_scheduler()
+        .core_threads(16)
+        .build();
+
+    match runtime_res {
+        Ok(mut runtime) => runtime.block_on(run()),
+        Err(_) => {
+            EsrPrinter::err("Failed to create tokio runtime.").println();
+            std::process::exit(1);
+        },
     }
 }

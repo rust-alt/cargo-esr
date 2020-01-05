@@ -9,7 +9,7 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use esr_errors::{Result, EsrError};
+use crate::esr_errors::{Result, EsrError};
 use term_string::{TermString, TermStyle};
 use term_string::color as C;
 

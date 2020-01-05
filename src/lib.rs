@@ -10,20 +10,6 @@
 */
 
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate serde_derive;
-
-extern crate term_string;
-extern crate serde;
-extern crate serde_json;
-extern crate reqwest;
-extern crate time;
-extern crate semver;
-extern crate pipeliner;
-extern crate regex;
-
-#[macro_use]
 mod esr_macros;
 mod esr_errors;
 mod esr_from;

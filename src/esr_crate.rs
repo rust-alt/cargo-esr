@@ -9,12 +9,15 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use pipeliner::Pipeline;
 use semver::{Version, VersionReq};
+use serde::Deserialize;
+use async_trait::async_trait;
+use futures::future;
+use tokio::task;
 
-use esr_errors::Result;
-use esr_util;
-use esr_from::{Meta, EsrFrom, DefEsrFrom, EsrFromMulti};
+use crate::esr_errors::Result;
+use crate::esr_util;
+use crate::esr_from::{Meta, EsrFrom, EsrFromMulti};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CrateGeneralInfo {
@@ -123,6 +126,7 @@ impl EsrFromMulti for CrateDependants {
     }
 }
 
+#[async_trait]
 impl EsrFrom for CrateDependants {
     fn url_from_id(id: &str) -> String {
         let url = String::from("https://crates.io/api/v1/crates/:\
@@ -130,8 +134,8 @@ impl EsrFrom for CrateDependants {
         url.replace(":id", id)
     }
 
-    fn from_id(id: &str) -> Result<Self> {
-        EsrFromMulti::from_url_multi(&Self::url_from_id(id), true)
+    async fn from_id(id: &str) -> Result<Self> {
+        EsrFromMulti::from_url_multi(&*Self::url_from_id(id), true).await
     }
 }
 
@@ -276,30 +280,14 @@ impl CrateInfo {
         }
     }
 
-    pub fn from_id(id: &str) -> Result<Self> {
-        let urls = vec![
-            CrateSelfInfo::url_from_id(id),
-            CrateOwners::url_from_id(id),
-            // XXX: We can't add dependants because it requires multi-page.
-            // Adding it will silently get results from a single page.
-            //CrateDependants::url_from_id(id),
-        ];
-
-        let mut bytes_iter  = urls
-            .into_iter()
-            .with_threads(2)
-            .ordered_map(|url| DefEsrFrom::bytes_from_url(&url));
-
-        // We do this before collect()ing the pipe-lined iter to save time
-        let dependants = CrateDependants::from_id(id)?;
-
-        let bytes_self = bytes_iter.next().expect("impossible")?;
-        let bytes_owners = bytes_iter.next().expect("impossible")?;
-
+    pub async fn from_id(id: String) -> Result<Self> {
+        let dependants_fut = task::spawn(CrateDependants::from_id_owned(id.clone()));
+        let self_info_fut = task::spawn(CrateSelfInfo::from_id_owned(id.clone()));
+        let owners_fut = task::spawn(CrateOwners::from_id_owned(id));
         Ok(Self {
-            self_info: CrateSelfInfo::from_bytes(&*bytes_self)?,
-            owners: CrateOwners::from_bytes(&*bytes_owners)?,
-            dependants,
+            self_info: self_info_fut.await??,
+            owners: owners_fut.await??,
+            dependants: dependants_fut.await??,
         })
     }
 }
@@ -324,7 +312,7 @@ pub struct CrateScoreInfo {
 }
 
 impl CrateScoreInfo {
-    fn from_crate_info(crate_info: &CrateInfo) -> Result<Self> {
+    async fn from_crate_info(crate_info: &CrateInfo) -> Result<Self> {
         let general_info = &crate_info.self_info.general_info;
 
         let has_desc = general_info.description.is_some() as usize;
@@ -382,9 +370,13 @@ impl CrateScoreInfo {
 
         let owners_crates = owners_ids
             .into_iter()
-            .with_threads(4)
-            .map(|id| CrateSearch::from_id(&id))
-            .collect::<Result<Vec<_>>>()?;
+            .map(|id| task::spawn(CrateSearch::from_id_owned(id)));
+
+        let owners_crates = future::join_all(owners_crates)
+            .await
+            .into_iter()
+            .map(|t| t.map_err(|e| e.into()))
+            .collect::<Result<Result<Vec<_>>>>()??;
 
         let owners_crates_flat: Vec<_> = owners_crates.iter()
             .flat_map(|search| search.crates.iter())
@@ -495,9 +487,9 @@ pub struct CrateInfoWithScore {
 }
 
 impl CrateInfoWithScore {
-    pub fn from_id(id: &str) -> Result<Self> {
-        let crate_info = CrateInfo::from_id(id)?;
-        let crate_score_info = CrateScoreInfo::from_crate_info(&crate_info)?;
+    pub async fn from_id(id: String) -> Result<Self> {
+        let crate_info = CrateInfo::from_id(id).await?;
+        let crate_score_info = CrateScoreInfo::from_crate_info(&crate_info).await?;
         let (score_table, score_positive, score_negative) = crate_score_info.mk_score();
 
         Ok(Self {
@@ -551,23 +543,24 @@ impl EsrFromMulti for CrateSearch {
     }
 }
 
+#[async_trait]
 impl EsrFrom for CrateSearch {
     // id here is all search params
     fn url_from_id(id: &str) -> String {
         String::from("https://crates.io/api/v1/crates?per_page=100&") + id
     }
 
-    fn from_id(id: &str) -> Result<Self> {
-        EsrFromMulti::from_url_multi(&Self::url_from_id(id), true)
+    async fn from_id(id: &str) -> Result<Self> {
+        EsrFromMulti::from_url_multi(&*Self::url_from_id(id), true).await
     }
 }
 
 impl CrateSearch {
     // id here is all search params
-    pub fn from_id_single_page(id: &str) -> Result<Self> {
+    pub async fn from_id_single_page(id: &str) -> Result<Self> {
         let mut url = String::from("https://crates.io/api/v1/crates?");
         url.push_str(id);
-        EsrFromMulti::from_url_multi(&url, false)
+        EsrFromMulti::from_url_multi(&*url, false).await
     }
 
     pub fn get_crates(&self) -> &[CrateGeneralInfo] {

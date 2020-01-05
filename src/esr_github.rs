@@ -9,11 +9,12 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use pipeliner::Pipeline;
+use serde::Deserialize;
+use tokio::task;
 
-use esr_from::{EsrFrom, DefEsrFrom};
-use esr_util;
-use esr_errors::Result;
+use crate::esr_from::EsrFrom;
+use crate::esr_util;
+use crate::esr_errors::Result;
 
 #[derive(Deserialize, Debug)]
 struct PullRequestInfo {
@@ -91,29 +92,18 @@ impl RepoInfo {
         Err("Unimplemented: use  from_id_with_token()")?
     }
 
-    pub fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
-        let urls = vec![
-            RepoGeneralInfo::url_from_id_and_token(id, token),
-            RepoClosedIssues::url_from_id_and_token(id, token),
-            RepoPullRequests::url_from_id_and_token(id, token),
-            RepoContributors::url_from_id_and_token(id, token),
-        ];
-
-        let mut bytes_iter = urls
-            .into_iter()
-            .with_threads(4)
-            .ordered_map(|url| DefEsrFrom::bytes_from_url(&url));
-
-        let bytes_general = bytes_iter.next().expect("impossible")?;
-        let bytes_closed_issues = bytes_iter.next().expect("impossible")?;
-        let bytes_pulls = bytes_iter.next().expect("impossible")?;
-        let bytes_contributors = bytes_iter.next().expect("impossible")?;
+    pub async fn from_id_with_token(id: String, token: String) -> Result<Self> {
+        // pulls is slow, so we spawn it first
+        let last_100_pull_requests_fut = task::spawn(RepoPullRequests::from_id_with_token_owned(id.clone(), token.clone()));
+        let last_100_closed_issues_fut = task::spawn(RepoClosedIssues::from_id_with_token_owned(id.clone(), token.clone()));
+        let top_100_contributors_fut = task::spawn(RepoContributors::from_id_with_token_owned(id.clone(), token.clone()));
+        let general_info_fut = task::spawn(RepoGeneralInfo::from_id_with_token_owned(id, token));
 
         Ok(Self {
-            general_info: RepoGeneralInfo::from_bytes(&*bytes_general)?,
-            last_100_closed_issues: RepoClosedIssues::from_bytes(&*bytes_closed_issues)?,
-            last_100_pull_requests: RepoPullRequests::from_bytes(&*bytes_pulls)?,
-            top_100_contributors: RepoContributors::from_bytes(&*bytes_contributors)?,
+            general_info: general_info_fut.await??,
+            last_100_closed_issues: last_100_closed_issues_fut.await??,
+            last_100_pull_requests: last_100_pull_requests_fut.await??,
+            top_100_contributors: top_100_contributors_fut.await??,
         })
     }
 }
@@ -260,8 +250,8 @@ pub struct RepoInfoWithScore {
 }
 
 impl RepoInfoWithScore {
-    pub fn from_id_with_token(id: &str, token: &str) -> Result<Self> {
-        let repo_info = RepoInfo::from_id_with_token(id, token)?;
+    pub async fn from_id_with_token(id: String, token: String) -> Result<Self> {
+        let repo_info = RepoInfo::from_id_with_token(id, token).await?;
         let repo_score_info = RepoScoreInfo::from_repo_info(&repo_info)?;
         let (score_table, score_positive, score_negative) = repo_score_info.mk_score();
 
