@@ -66,3 +66,6 @@ args:
       empty_values: false
       value_name: CARGO_ESR_GH_TOKEN
       help: "Set GitHub Access Token (https://github.com/settings/tokens/new)"
+  - debug:
+      long: debug
+      help: "Show debugging messages"

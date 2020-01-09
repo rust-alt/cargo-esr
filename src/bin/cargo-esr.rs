@@ -82,6 +82,27 @@ async fn run() {
     let search_by_recent_downloads = m.is_present("search-by-recent-downloads");
     let search_by_total_downloads = m.is_present("search-by-total-downloads");
 
+    if m.is_present("debug") {
+        let _logger_setup = fern::Dispatch::new()
+            .format(|out, message, _| {
+                out.finish(format_args!(
+                        "{} {}",
+                        chrono::Local::now().format("[%H:%M:%S]"),
+                        message
+                ))
+            })
+            .level(log::LevelFilter::Off)
+            //.level_for("reqwest", log::LevelFilter::Debug)
+            .level_for("cargo_esr", log::LevelFilter::Debug)
+            .chain(std::io::stderr())
+            .apply();
+
+        if _logger_setup.is_err() {
+            EsrPrinter::err("Logger setup failed.");
+            std::process::exit(1);
+        }
+    }
+
     let results_limit_num = check_limit(results_limit);
     let _search_limit_num = check_limit(search_limit);
 

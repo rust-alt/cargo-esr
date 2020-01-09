@@ -109,6 +109,8 @@ pub trait EsrFrom: Sized + Sync + Send + DeserializeOwned {
     async fn bytes_from_url(url: &str) -> Result<Bytes> {
         let client = Client::builder().build()?;
 
+        log::debug!("Getting data from '{}'", url);
+
         // Creating an outgoing request.
         let ret = client.get(url)
             .header("user-agent", "cargo-esr/0.1")
@@ -117,6 +119,8 @@ pub trait EsrFrom: Sized + Sync + Send + DeserializeOwned {
             .error_for_status()?
             .bytes()
             .await?;
+
+        log::debug!("Got data from '{}' (len={})", url, ret.len());
 
         Ok(ret)
     }
