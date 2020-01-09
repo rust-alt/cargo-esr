@@ -9,7 +9,8 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
-use crate::esr_crate::{CrateInfoWithScore, CrateGeneralInfo};
+use crate::esr_crate::{CrateInfoWithScore, CrateInfo, CrateGeneralInfo};
+use crate::esr_from::EsrFrom;
 use crate::esr_github::RepoInfoWithScore;
 use crate::esr_printer::EsrPrinter;
 use crate::esr_util;
@@ -29,13 +30,16 @@ pub enum Scores {
 
 impl Scores {
     pub async fn from_id_with_token(id: String, gh_token: String) -> Result<Self> {
-        let cr_score = CrateInfoWithScore::from_id(id).await?;
-        let repo_score_res = cr_score.get_info().github_id()
+        let cr_info = CrateInfo::from_id(&*id).await?;
+
+        let repo_score_res = cr_info.github_id()
             .ok_or("Failed to get GitHub id")
-            .map(|gh_id| RepoInfoWithScore::from_id_with_token(gh_id, gh_token));
+            .map(|gh_id| task::spawn(RepoInfoWithScore::from_id_with_token(gh_id, gh_token)));
+
+        let cr_score = CrateInfoWithScore::from_info(cr_info).await?;
 
         match repo_score_res {
-            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score.await)),
+            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score.await?)),
             Err(_) => Ok(Scores::CrateOnly(cr_score)),
         }
     }

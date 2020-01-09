@@ -69,14 +69,14 @@ struct UserInfo {
 // =====
 
 #[derive(Deserialize, Debug)]
-struct CrateSelfInfo {
+pub struct CrateInfo {
     #[serde(rename = "crate")]
     general_info: CrateGeneralInfo,
     #[serde(rename = "versions")]
     releases: Vec<CrateReleaseInfo>,
 }
 
-impl EsrFrom for CrateSelfInfo {
+impl EsrFrom for CrateInfo {
     fn url_from_id(id: &str) -> String {
         String::from("https://crates.io/api/v1/crates/") + id
     }
@@ -129,27 +129,21 @@ impl Dependant {
     }
 }
 
-pub struct CrateInfo {
-    self_info: CrateSelfInfo,
-    owners: CrateOwners,
-    dependants: Vec<Dependant>,
-}
-
 impl CrateInfo {
     pub fn get_id(&self) -> &str {
-        &self.self_info.general_info.id
+        &self.general_info.id
     }
 
     pub fn get_max_version(&self) -> &str {
-        &self.self_info.general_info.max_version
+        &self.general_info.max_version
     }
 
     pub fn all_releases(&self) -> &[CrateReleaseInfo] {
-        &self.self_info.releases
+        &self.releases
     }
 
     pub fn non_yanked_releases(&self) -> Vec<&CrateReleaseInfo> {
-        self.self_info
+        self
             .releases
             .iter()
             .filter(|release| !release.yanked)
@@ -171,7 +165,7 @@ impl CrateInfo {
     }
 
     pub fn max_version_age(&self) -> Option<Result<f64>> {
-        let general_info = &self.self_info.general_info;
+        let general_info = &self.general_info;
         self.all_releases().iter()
             .filter(|r| &r.num == &general_info.max_version).nth(0)
             .map(|r| esr_util::age_in_months(&esr_util::crate_to_iso8601(&r.created_at)))
@@ -186,9 +180,9 @@ impl CrateInfo {
     }
 
     pub fn empty_or_all_yanked(&self) -> bool {
-        let no_releases = self.self_info.releases.is_empty();
+        let no_releases = self.releases.is_empty();
         let empty_release = self.get_max_version() == "0.0.0";
-        let all_yanked = self.self_info
+        let all_yanked = self
             .releases
             .iter()
             .find(|release| !release.yanked)
@@ -198,13 +192,12 @@ impl CrateInfo {
     }
 
     pub fn get_current_versions(&self) -> Result<Vec<&str>> {
-        let self_info = &self.self_info;
         let mut current_versions = Vec::with_capacity(8);
 
         // max_ver
         // XXX: max_version can point to a yanked version ATM.
         // this may change in the future as it's probably a bug.
-        current_versions.push(&*self_info.general_info.max_version);
+        current_versions.push(&*self.general_info.max_version);
 
         // Only take non-yanked releases into account
         let non_yanked_releases = self.non_yanked_releases();
@@ -228,7 +221,7 @@ impl CrateInfo {
     }
 
     pub fn get_description(&self) -> Option<&str> {
-        self.self_info
+        self
             .general_info
             .description
             .as_ref()
@@ -236,7 +229,7 @@ impl CrateInfo {
     }
 
     pub fn get_repository(&self) -> Option<&str> {
-        self.self_info
+        self
             .general_info
             .repository
             .as_ref()
@@ -244,7 +237,7 @@ impl CrateInfo {
     }
 
     pub fn get_documentation(&self) -> Option<&str> {
-        self.self_info
+        self
             .general_info
             .documentation
             .as_ref()
@@ -253,7 +246,7 @@ impl CrateInfo {
 
     pub fn get_license(&self) -> Option<&str> {
         // TODO: re-write when impl Try for Option is implemented
-        let max_ver_rel = self.self_info.releases
+        let max_ver_rel = self.releases
             .iter()
             .find(|rel| rel.num == self.get_max_version());
 
@@ -264,21 +257,10 @@ impl CrateInfo {
     }
 
     pub fn github_id(&self) -> Option<String> {
-        match self.self_info.general_info.repository {
+        match self.general_info.repository {
             Some(ref repo) => esr_util::github_repo(repo),
             None => None,
         }
-    }
-
-    pub async fn from_id(id: String) -> Result<Self> {
-        let self_info_fut = task::spawn(CrateSelfInfo::from_id_owned(id.clone()));
-        let owners_fut = task::spawn(CrateOwners::from_id_owned(id.clone()));
-        let dependants_fut = task::spawn(Dependant::dependants_from_id(id));
-        Ok(Self {
-            self_info: self_info_fut.await??,
-            owners: owners_fut.await??,
-            dependants: dependants_fut.await??,
-        })
     }
 }
 
@@ -303,7 +285,10 @@ pub struct CrateScoreInfo {
 
 impl CrateScoreInfo {
     async fn from_crate_info(crate_info: &CrateInfo) -> Result<Self> {
-        let general_info = &crate_info.self_info.general_info;
+        let general_info = &crate_info.general_info;
+
+        let owners_info_fut = task::spawn(CrateOwners::from_id_owned(general_info.id.clone()));
+        let dependants_info_fut = task::spawn(Dependant::dependants_from_id(general_info.id.clone()));
 
         let has_desc = general_info.description.is_some() as usize;
         let has_docs = general_info.documentation.is_some() as usize;
@@ -329,15 +314,18 @@ impl CrateScoreInfo {
             None => esr_util::age_in_months(&esr_util::crate_to_iso8601(&general_info.created_at))?,
         };
 
+        let dependants_info = dependants_info_fut.await??;
+        let owners_info = owners_info_fut.await??;
+
         // Reverse dependencies
-        let dependants = crate_info.dependants.len();
+        let dependants = dependants_info.len();
 
         let current_versions = crate_info.get_current_versions()?;
-        let hard_dependants = crate_info.dependants
+        let hard_dependants = dependants_info
             .iter()
             .filter(|dependant| dependant.default_features && !dependant.optional)
             .count();
-        let dependants_on_current_versions = crate_info.dependants
+        let dependants_on_current_versions = dependants_info
             .iter()
             .filter(|dependant| {
                 current_versions.iter().any(|&ver| {
@@ -350,7 +338,7 @@ impl CrateScoreInfo {
             .count();
 
         // We do this in a separate step to make `with_threads()` work
-        let owners_ids: Vec<_> = crate_info.owners
+        let owners_ids: Vec<_> = owners_info
             .users
             .iter()
             .map(|user| format!("user_id={}", user.id))
@@ -371,7 +359,7 @@ impl CrateScoreInfo {
             .collect();
 
         let dependants_by_owners =
-            crate_info.dependants
+            dependants_info
                 .iter()
                 .filter_map(|dependant| {
                     owners_crates_flat.iter().find(|cr| cr.id == dependant.crate_name)
@@ -474,8 +462,7 @@ pub struct CrateInfoWithScore {
 }
 
 impl CrateInfoWithScore {
-    pub async fn from_id(id: String) -> Result<Self> {
-        let crate_info = CrateInfo::from_id(id).await?;
+    pub async fn from_info(crate_info: CrateInfo) -> Result<Self> {
         let crate_score_info = CrateScoreInfo::from_crate_info(&crate_info).await?;
         let (score_table, score_positive, score_negative) = crate_score_info.mk_score();
 
@@ -486,6 +473,11 @@ impl CrateInfoWithScore {
             score_negative,
             score_table,
         })
+    }
+
+    pub async fn from_id(id: String) -> Result<Self> {
+        let crate_info = CrateInfo::from_id(&*id).await?;
+        Self::from_info(crate_info).await
     }
 
     pub fn get_info(&self) -> &CrateInfo {
