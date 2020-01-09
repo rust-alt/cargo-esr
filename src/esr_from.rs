@@ -19,13 +19,12 @@ use crate::esr_errors::Result;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Meta {
-    total: usize,
+    pub total: usize,
 }
 
 #[async_trait]
 pub trait EsrFromMulti: EsrFrom + Sync + Send + 'static {
     type Inner: Clone;
-    type Inner2: Clone;
 
     async fn from_url_multi(url: &str, multi_page: bool) -> Result<Self> {
         let mut initial_self = Self::from_url(url).await?;
@@ -44,25 +43,12 @@ pub trait EsrFromMulti: EsrFrom + Sync + Send + 'static {
             for page_res in future::join_all(more_pages_iter).await {
                 let page = page_res?;
                 initial_self.get_inner_mut().extend_from_slice(&*page.get_inner());
-
-                // If inner2 exists
-                match (initial_self.get_inner2_mut_opt(), page.get_inner2_opt()) {
-                    (Some(initial_inner2_mut), Some(page_inner2)) => initial_inner2_mut.extend_from_slice(&*page_inner2),
-                    (Some(_), None) | (None, Some(_)) => Err("Wrong trait implementation!")?,
-                    (None, None) => (),
-                }
             }
 
         }
 
         if multi_page && initial_self.get_inner().len() != total {
             Err("Total no. of results does not match total reported")?;
-        }
-
-        if let Some(inner2) = initial_self.get_inner2_opt() {
-            if inner2.len() != initial_self.get_inner().len() {
-                Err("Inner/Inner2 length mismatch")?;
-            }
         }
 
         Ok(initial_self)
@@ -80,14 +66,6 @@ pub trait EsrFromMulti: EsrFrom + Sync + Send + 'static {
     fn get_meta(&self) -> &Meta;
     fn get_inner(&self) -> &Vec<Self::Inner>;
     fn get_inner_mut(&mut self) -> &mut Vec<Self::Inner>;
-
-    fn get_inner2_opt(&self) -> Option<&Vec<Self::Inner2>> {
-        None
-    }
-
-    fn get_inner2_mut_opt(&mut self) -> Option<&mut Vec<Self::Inner2>> {
-        None
-    }
 }
 
 #[async_trait]

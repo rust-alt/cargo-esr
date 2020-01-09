@@ -20,6 +20,7 @@ pub enum EsrError {
     SerdeJson(serde_json::Error),
     Regex(regex::Error),
     Reqwest(reqwest::Error),
+    CratesIndex(String),
     TokioTaskJoin(tokio::task::JoinError),
     Other(String),
 }
@@ -32,6 +33,7 @@ impl fmt::Display for EsrError {
             EsrError::SerdeJson(ref e) => write!(f, "Deserialization Error: {}", e),
             EsrError::Regex(ref e) => write!(f, "Regex Error: {}", e),
             EsrError::Reqwest(ref e) => write!(f, "Reqwest Error: {}", e),
+            EsrError::CratesIndex(ref e) => write!(f, "CratesIndex Error: {}", e),
             EsrError::TokioTaskJoin(ref e) => write!(f, "tokio task join Error: {}", e),
             EsrError::Other(ref e) => write!(f, "Error: {}", e),
         }
@@ -71,6 +73,12 @@ impl From<tokio::task::JoinError> for EsrError {
 impl From<reqwest::Error> for EsrError {
     fn from(e: reqwest::Error) -> Self {
         EsrError::Reqwest(e)
+    }
+}
+
+impl From<crates_index::Error> for EsrError {
+    fn from(e: crates_index::Error) -> Self {
+        EsrError::CratesIndex(e.to_string())
     }
 }
 

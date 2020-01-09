@@ -9,15 +9,31 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
+use crates_index::Index;
 use semver::{Version, VersionReq};
 use serde::Deserialize;
 use async_trait::async_trait;
 use futures::future;
 use tokio::task;
+use once_cell::sync::OnceCell;
 
-use crate::esr_errors::Result;
+use crate::esr_errors::{Result, EsrError};
 use crate::esr_util;
 use crate::esr_from::{Meta, EsrFrom, EsrFromMulti};
+
+fn get_index() -> Result<&'static Index> {
+        static INDEX: OnceCell<std::result::Result<Index, String>> = OnceCell::new();
+        let init = || {
+            log::debug!("initializing crates index");
+            let index = Index::new_cargo_default();
+            index.retrieve_or_update()
+                .map_err(|e| e.to_string())
+                .map(|_| index)
+        };
+        INDEX.get_or_init(init)
+            .as_ref()
+            .map_err(|e| EsrError::from(&**e))
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CrateGeneralInfo {
@@ -43,19 +59,6 @@ pub struct CrateReleaseInfo {
     num: String, // version
     yanked: bool,
     license: Option<String>,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct DependantInfo {
-    default_features: bool,
-    optional: bool,
-    req: String, // version required
-}
-
-#[derive(Deserialize, Debug, Clone)]
-struct DependantName {
-    #[serde(rename = "crate")]
-    crate_name: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -93,56 +96,43 @@ impl EsrFrom for CrateOwners {
 }
 
 #[derive(Deserialize, Debug)]
-struct CrateDependants {
-    #[serde(rename = "dependencies")]
-    dependants: Vec<DependantInfo>,
-    #[serde(rename = "versions")]
-    names: Vec<DependantName>,
-    meta: Meta,
+struct Dependant {
+    crate_name: String,
+    default_features: bool,
+    optional: bool,
+    req: String, // version required
 }
 
-impl EsrFromMulti for CrateDependants {
-    type Inner = DependantInfo;
-    type Inner2 = DependantName;
+impl Dependant {
+    async fn dependants_from_id(id: String) -> Result<Vec<Self>> {
+        log::debug!("Getting dependats from index for {}", id);
+        let mut ret = Vec::with_capacity(64);
+        for cr in get_index()?.crates() {
+            let latest_version = cr.latest_version();
+            let match_opt = latest_version
+                .dependencies()
+                .iter()
+                .find(|dep| !latest_version.is_yanked() && dep.crate_name() == id);
 
-    fn get_meta(&self) -> &Meta {
-        &self.meta
-    }
-
-    fn get_inner(&self) -> &Vec<Self::Inner> {
-        &self.dependants
-    }
-
-    fn get_inner_mut(&mut self) -> &mut Vec<Self::Inner> {
-        &mut self.dependants
-    }
-
-    fn get_inner2_opt(&self) -> Option<&Vec<Self::Inner2>> {
-        Some(&self.names)
-    }
-
-    fn get_inner2_mut_opt(&mut self) -> Option<&mut Vec<Self::Inner2>> {
-        Some(&mut self.names)
-    }
-}
-
-#[async_trait]
-impl EsrFrom for CrateDependants {
-    fn url_from_id(id: &str) -> String {
-        let url = String::from("https://crates.io/api/v1/crates/:\
-                                id/reverse_dependencies?per_page=100");
-        url.replace(":id", id)
-    }
-
-    async fn from_id(id: &str) -> Result<Self> {
-        EsrFromMulti::from_url_multi(&*Self::url_from_id(id), true).await
+            if let Some(dep) = match_opt {
+                ret.push(
+                    Self {
+                        crate_name: cr.name().into(),
+                        default_features: dep.has_default_features() && !dep.is_optional(),
+                        optional: dep.is_optional(),
+                        req: dep.requirement().into(),
+                    }
+                );
+            }
+        }
+        Ok(ret)
     }
 }
 
 pub struct CrateInfo {
     self_info: CrateSelfInfo,
     owners: CrateOwners,
-    dependants: CrateDependants,
+    dependants: Vec<Dependant>,
 }
 
 impl CrateInfo {
@@ -281,9 +271,9 @@ impl CrateInfo {
     }
 
     pub async fn from_id(id: String) -> Result<Self> {
-        let dependants_fut = task::spawn(CrateDependants::from_id_owned(id.clone()));
         let self_info_fut = task::spawn(CrateSelfInfo::from_id_owned(id.clone()));
-        let owners_fut = task::spawn(CrateOwners::from_id_owned(id));
+        let owners_fut = task::spawn(CrateOwners::from_id_owned(id.clone()));
+        let dependants_fut = task::spawn(Dependant::dependants_from_id(id));
         Ok(Self {
             self_info: self_info_fut.await??,
             owners: owners_fut.await??,
@@ -340,16 +330,14 @@ impl CrateScoreInfo {
         };
 
         // Reverse dependencies
-        let dependants = crate_info.dependants.dependants.len();
+        let dependants = crate_info.dependants.len();
 
         let current_versions = crate_info.get_current_versions()?;
         let hard_dependants = crate_info.dependants
-            .dependants
             .iter()
             .filter(|dependant| dependant.default_features && !dependant.optional)
             .count();
         let dependants_on_current_versions = crate_info.dependants
-            .dependants
             .iter()
             .filter(|dependant| {
                 current_versions.iter().any(|&ver| {
@@ -384,10 +372,9 @@ impl CrateScoreInfo {
 
         let dependants_by_owners =
             crate_info.dependants
-                .names
                 .iter()
-                .filter_map(|dependant_name| {
-                    owners_crates_flat.iter().find(|cr| cr.id == dependant_name.crate_name)
+                .filter_map(|dependant| {
+                    owners_crates_flat.iter().find(|cr| cr.id == dependant.crate_name)
                 })
                 .count();
 
@@ -528,7 +515,6 @@ pub struct CrateSearch {
 
 impl EsrFromMulti for CrateSearch {
     type Inner = CrateGeneralInfo;
-    type Inner2 = ();
 
     fn get_meta(&self) -> &Meta {
         &self.meta
