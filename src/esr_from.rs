@@ -114,6 +114,7 @@ pub trait EsrFrom: Sized + Sync + Send + DeserializeOwned {
             .header("user-agent", "cargo-esr/0.1")
             .send()
             .await?
+            .error_for_status()?
             .bytes()
             .await?;
 
