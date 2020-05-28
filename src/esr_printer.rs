@@ -179,4 +179,8 @@ impl EsrPrinter {
                    Alternatively, you can pass -o/--crate-only to skip getting repository info.";
         TermString::new(YELLOW_BOLD(), msg)
     }
+
+    pub fn crate_index_init() -> TermString {
+        TermString::new(CYAN_BOLD(), "Crates index is initializing/updating, this may take a few seconds...")
+    }
 }

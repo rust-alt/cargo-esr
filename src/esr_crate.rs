@@ -20,11 +20,12 @@ use once_cell::sync::OnceCell;
 use crate::esr_errors::{Result, EsrError};
 use crate::esr_util;
 use crate::esr_from::{Meta, EsrFrom, EsrFromMulti};
+use crate::esr_printer::EsrPrinter;
 
 fn get_index() -> Result<&'static Index> {
         static INDEX: OnceCell<std::result::Result<Index, String>> = OnceCell::new();
         let init = || {
-            log::debug!("initializing crates index");
+            EsrPrinter::crate_index_init().eprintln();
             let index = Index::new_cargo_default();
             index.retrieve_or_update()
                 .map_err(|e| e.to_string())
