@@ -25,8 +25,6 @@
 
 ### Install
 
- A **nightly** compiler is required.
-
  ```
  cargo install --force --git https://github.com/rust-alt/cargo-esr.git
  ```
