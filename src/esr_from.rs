@@ -9,13 +9,28 @@
     file, You can obtain one at <http://mozilla.org/MPL/2.0/>.
 */
 
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, de::DeserializeOwned};
-use reqwest::Client;
-use bytes::Bytes;
+use isahc::{HttpClientBuilder, HttpClient, AsyncReadResponseExt};
+use isahc::config::{Configurable, RedirectPolicy};
 use async_trait::async_trait;
 use futures::future;
 
 use crate::esr_errors::Result;
+
+fn get_static_client() -> Result<&'static HttpClient> {
+    static RET: OnceCell<HttpClient> = OnceCell::new();
+    let init = || HttpClientBuilder::new()
+        //.connect_timeout(Duration::from_secs(5))
+        .max_connections(32)
+        .redirect_policy(RedirectPolicy::Limit(5))
+        .auto_referer()
+        .default_header("User-Agent", "cargo-esr/0.1")
+        .build();
+    let ret = RET.get_or_try_init(init)?;
+    Ok(ret)
+
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Meta {
@@ -36,7 +51,7 @@ pub trait EsrFromMulti: EsrFrom + Sync + Send + 'static {
             let num_pages = (total as f64 / 100.0).ceil() as usize;
 
             let more_pages_iter = (2..=num_pages)
-                .map(|page| url.to_owned() + &format!("&page={}", page))
+                .map(|page| url.to_owned() + &*format!("&page={}", page))
                 .map(|page_url| Self::from_url_owned(page_url));
 
 
@@ -84,30 +99,25 @@ pub trait EsrFrom: Sized + Sync + Send + DeserializeOwned {
         }
     }
 
-    async fn bytes_from_url(url: &str) -> Result<Bytes> {
-        let client = Client::builder().build()?;
-
+    async fn bytes_from_url(url: &str) -> Result<Vec<u8>> {
+        let client = get_static_client()?;
         log::debug!("Getting data from '{}'", url);
 
         // Creating an outgoing request.
-        let ret = client.get(url)
-            .header("user-agent", "cargo-esr/0.1")
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
+        let mut response = client.get_async(url).await?;
+        let mut buf = Vec::with_capacity(64*1024);
+        response.copy_to(&mut buf).await?;
 
-        log::debug!("Got data from '{}' (len={})", url, ret.len());
+        log::debug!("Got data from '{}' (len={})", url, buf.len());
 
-        Ok(ret)
+        Ok(buf)
     }
 
-    async fn bytes_from_id(id: &str) -> Result<Bytes> {
+    async fn bytes_from_id(id: &str) -> Result<Vec<u8>> {
         Self::bytes_from_url(&*Self::url_from_id(id)).await
     }
 
-    async fn bytes_from_id_with_token(id: &str, token: &str) -> Result<Bytes> {
+    async fn bytes_from_id_with_token(id: &str, token: &str) -> Result<Vec<u8>> {
         Self::bytes_from_url(&*Self::url_from_id_and_token(id, token)).await
     }
 

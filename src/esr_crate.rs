@@ -14,7 +14,6 @@ use semver::{Version, VersionReq};
 use serde::Deserialize;
 use async_trait::async_trait;
 use futures::future;
-use tokio::task;
 use once_cell::sync::OnceCell;
 
 use crate::esr_errors::{Result, EsrError};
@@ -107,26 +106,28 @@ struct Dependant {
 impl Dependant {
     async fn dependants_from_id(id: String) -> Result<Vec<Self>> {
         log::debug!("Getting dependats from index for {}", id);
-        let mut ret = Vec::with_capacity(64);
-        for cr in get_index()?.crates() {
-            let latest_version = cr.latest_version();
-            let match_opt = latest_version
-                .dependencies()
-                .iter()
-                .find(|dep| !latest_version.is_yanked() && dep.crate_name() == id);
+        smol::spawn( async move {
+            let mut ret = Vec::with_capacity(64);
+            for cr in get_index()?.crates() {
+                let latest_version = cr.latest_version();
+                let match_opt = latest_version
+                    .dependencies()
+                    .iter()
+                    .find(|dep| !latest_version.is_yanked() && dep.crate_name() == id);
 
-            if let Some(dep) = match_opt {
-                ret.push(
-                    Self {
-                        crate_name: cr.name().into(),
-                        default_features: dep.has_default_features() && !dep.is_optional(),
-                        optional: dep.is_optional(),
-                        req: dep.requirement().into(),
-                    }
-                );
+                if let Some(dep) = match_opt {
+                    ret.push(
+                        Self {
+                            crate_name: cr.name().into(),
+                            default_features: dep.has_default_features() && !dep.is_optional(),
+                            optional: dep.is_optional(),
+                            req: dep.requirement().into(),
+                        }
+                    );
+                }
             }
-        }
-        Ok(ret)
+            Ok(ret)
+        }).await
     }
 }
 
@@ -288,8 +289,8 @@ impl CrateScoreInfo {
     async fn from_crate_info(crate_info: &CrateInfo) -> Result<Self> {
         let general_info = &crate_info.general_info;
 
-        let owners_info_fut = task::spawn(CrateOwners::from_id_owned(general_info.id.clone()));
-        let dependants_info_fut = task::spawn(Dependant::dependants_from_id(general_info.id.clone()));
+        let owners_info_fut = smol::spawn(CrateOwners::from_id_owned(general_info.id.clone()));
+        let dependants_info_fut = smol::spawn(Dependant::dependants_from_id(general_info.id.clone()));
 
         let has_desc = general_info.description.is_some() as usize;
         let has_docs = general_info.documentation.is_some() as usize;
@@ -315,8 +316,8 @@ impl CrateScoreInfo {
             None => esr_util::age_in_months(&esr_util::crate_to_iso8601(&general_info.created_at))?,
         };
 
-        let dependants_info = dependants_info_fut.await??;
-        let owners_info = owners_info_fut.await??;
+        let dependants_info = dependants_info_fut.await?;
+        let owners_info = owners_info_fut.await?;
 
         // Reverse dependencies
         let dependants = dependants_info.len();
@@ -347,13 +348,13 @@ impl CrateScoreInfo {
 
         let owners_crates = owners_ids
             .into_iter()
-            .map(|id| task::spawn(CrateSearch::from_id_owned(id)));
+            .map(|id| smol::spawn(CrateSearch::from_id_owned(id)));
 
         let owners_crates = future::join_all(owners_crates)
             .await
             .into_iter()
             .map(|t| t.map_err(|e| e.into()))
-            .collect::<Result<Result<Vec<_>>>>()??;
+            .collect::<Result<Vec<_>>>()?;
 
         let owners_crates_flat: Vec<_> = owners_crates.iter()
             .flat_map(|search| search.crates.iter())

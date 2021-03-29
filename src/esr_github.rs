@@ -10,7 +10,6 @@
 */
 
 use serde::Deserialize;
-use tokio::task;
 
 use crate::esr_from::EsrFrom;
 use crate::esr_util;
@@ -94,16 +93,16 @@ impl RepoInfo {
 
     pub async fn from_id_with_token(id: String, token: String) -> Result<Self> {
         // pulls is slow, so we spawn it first
-        let last_100_pull_requests_fut = task::spawn(RepoPullRequests::from_id_with_token_owned(id.clone(), token.clone()));
-        let last_100_closed_issues_fut = task::spawn(RepoClosedIssues::from_id_with_token_owned(id.clone(), token.clone()));
-        let top_100_contributors_fut = task::spawn(RepoContributors::from_id_with_token_owned(id.clone(), token.clone()));
-        let general_info_fut = task::spawn(RepoGeneralInfo::from_id_with_token_owned(id, token));
+        let last_100_pull_requests_fut = smol::spawn(RepoPullRequests::from_id_with_token_owned(id.clone(), token.clone()));
+        let last_100_closed_issues_fut = smol::spawn(RepoClosedIssues::from_id_with_token_owned(id.clone(), token.clone()));
+        let top_100_contributors_fut = smol::spawn(RepoContributors::from_id_with_token_owned(id.clone(), token.clone()));
+        let general_info_fut = smol::spawn(RepoGeneralInfo::from_id_with_token_owned(id, token));
 
         Ok(Self {
-            general_info: general_info_fut.await??,
-            last_100_closed_issues: last_100_closed_issues_fut.await??,
-            last_100_pull_requests: last_100_pull_requests_fut.await??,
-            top_100_contributors: top_100_contributors_fut.await??,
+            general_info: general_info_fut.await?,
+            last_100_closed_issues: last_100_closed_issues_fut.await?,
+            last_100_pull_requests: last_100_pull_requests_fut.await?,
+            top_100_contributors: top_100_contributors_fut.await?,
         })
     }
 }

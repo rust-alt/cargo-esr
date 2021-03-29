@@ -19,9 +19,8 @@ pub enum EsrError {
     TimeParse(time::ParseError),
     SerdeJson(serde_json::Error),
     Regex(regex::Error),
-    Reqwest(reqwest::Error),
+    Isahc(isahc::Error),
     CratesIndex(String),
-    TokioTaskJoin(tokio::task::JoinError),
     Other(String),
 }
 
@@ -32,9 +31,8 @@ impl fmt::Display for EsrError {
             EsrError::TimeParse(ref e) => write!(f, "Time parsing Error: {}", e),
             EsrError::SerdeJson(ref e) => write!(f, "Deserialization Error: {}", e),
             EsrError::Regex(ref e) => write!(f, "Regex Error: {}", e),
-            EsrError::Reqwest(ref e) => write!(f, "Reqwest Error: {}", e),
+            EsrError::Isahc(ref e) => write!(f, "isahc Error: {}", e),
             EsrError::CratesIndex(ref e) => write!(f, "CratesIndex Error: {}", e),
-            EsrError::TokioTaskJoin(ref e) => write!(f, "tokio task join Error: {}", e),
             EsrError::Other(ref e) => write!(f, "Error: {}", e),
         }
     }
@@ -64,15 +62,9 @@ impl From<regex::Error> for EsrError {
     }
 }
 
-impl From<tokio::task::JoinError> for EsrError {
-    fn from(e: tokio::task::JoinError) -> Self {
-        EsrError::TokioTaskJoin(e)
-    }
-}
-
-impl From<reqwest::Error> for EsrError {
-    fn from(e: reqwest::Error) -> Self {
-        EsrError::Reqwest(e)
+impl From<isahc::Error> for EsrError {
+    fn from(e: isahc::Error) -> Self {
+        EsrError::Isahc(e)
     }
 }
 

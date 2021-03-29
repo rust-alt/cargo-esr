@@ -161,9 +161,9 @@ async fn run() {
                 },
                 false => match (search_by_relevance, search_by_total_downloads, search_by_recent_downloads) {
                     // default
-                    (false, false, _) => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=recent-downloads",
-                    (_, true, _)      => "per_page=".to_string() + search_limit + "&q=" + &search_str + "&sort=downloads",
-                    (true, _, _)      => "per_page=".to_string() + search_limit + "&q=" + &search_str,
+                    (false, false, _) => "per_page=".to_string() + search_limit + "&q=" + &*search_str + "&sort=recent-downloads",
+                    (_, true, _)      => "per_page=".to_string() + search_limit + "&q=" + &*search_str + "&sort=downloads",
+                    (true, _, _)      => "per_page=".to_string() + search_limit + "&q=" + &*search_str,
                 },
 
             };
@@ -177,19 +177,7 @@ async fn run() {
                         std::process::exit(1);
                     }
 
-                    let crates_scores_res = match Scores::collect_scores(
-                        crates,
-                        &gh_token,
-                        crate_only,
-                        repo_only)
-                        .await {
-                            Ok(res) => res,
-                            Err(_) => {
-                                EsrPrinter::err("A tokio task or more returned errors.");
-                                std::process::exit(1);
-                            },
-                    };
-
+                    let crates_scores_res = Scores::collect_scores(crates, &gh_token, crate_only, repo_only).await;
                     Scores::search_results(&*crates_scores_res, sort_positive, results_limit_num).println();
                 },
                 Err(ref e) => {
@@ -204,20 +192,5 @@ async fn run() {
 }
 
 fn main() {
-
-    // build runtime
-    let runtime_res = tokio::runtime::Builder::new()
-        .enable_all()
-        //.basic_scheduler()
-        .threaded_scheduler()
-        .core_threads(16)
-        .build();
-
-    match runtime_res {
-        Ok(mut runtime) => runtime.block_on(run()),
-        Err(_) => {
-            EsrPrinter::err("Failed to create tokio runtime.").println();
-            std::process::exit(1);
-        },
-    }
+    smol::block_on(run());
 }

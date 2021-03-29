@@ -131,7 +131,7 @@ impl EsrPrinter {
             } else {
                 score_formatted += sep() + TermString::new(YELLOW_BOLD(), &*line.0) + sep();
                 score_formatted += TermString::new(GREEN_BOLD(), &*line.1) + sep();
-                score_formatted += TermString::new(GREEN_BOLD(), format!("{: ^11}", "+".to_string() + &line.2)) + sep() + "\n";
+                score_formatted += TermString::new(GREEN_BOLD(), format!("{: ^11}", "+".to_string() + &*line.2)) + sep() + "\n";
                 score_formatted += frame_line();
             }
         }

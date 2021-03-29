@@ -17,7 +17,6 @@ use crate::esr_util;
 use crate::esr_errors::Result;
 
 use term_string::TermString;
-use tokio::task;
 
 use std::f64;
 use std::default::Default;
@@ -34,12 +33,12 @@ impl Scores {
 
         let repo_score_res = cr_info.github_id()
             .ok_or("Failed to get GitHub id")
-            .map(|gh_id| task::spawn(RepoInfoWithScore::from_id_with_token(gh_id, gh_token)));
+            .map(|gh_id| smol::spawn(RepoInfoWithScore::from_id_with_token(gh_id, gh_token)));
 
         let cr_score = CrateInfoWithScore::from_info(cr_info).await?;
 
         match repo_score_res {
-            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score.await?)),
+            Ok(repo_score) => Ok(Scores::CrateAndRepo(cr_score, repo_score.await)),
             Err(_) => Ok(Scores::CrateOnly(cr_score)),
         }
     }
@@ -126,33 +125,30 @@ impl Scores {
 
     pub async fn collect_scores(crates: &[CrateGeneralInfo], token: &str,
                           crate_only: bool,
-                          repo_only: bool) -> Result<Vec<(String, Result<Self>)>> {
+                          repo_only: bool) -> Vec<(String, Result<Self>)> {
 
         let task_iter = if crate_only {
             crates
                 .iter()
                 .map(|cr| String::from(cr.get_id()))
-                .map(|id| task::spawn(async { (id.clone(), Scores::from_id_crate_only(id).await) }))
+                .map(|id| smol::spawn(async { (id.clone(), Scores::from_id_crate_only(id).await) }))
                 .collect::<Vec<_>>()
 
         } else if repo_only {
             crates
                 .iter()
                 .map(|cr| (String::from(cr.get_id()), String::from(token)))
-                .map(|(id, token)| task::spawn(async { (id.clone(), Scores::from_id_with_token_repo_only(id, token).await) }))
+                .map(|(id, token)| smol::spawn(async { (id.clone(), Scores::from_id_with_token_repo_only(id, token).await) }))
                 .collect::<Vec<_>>()
         } else {
             crates
                 .iter()
                 .map(|cr| (String::from(cr.get_id()), String::from(token)))
-                .map(|(id, token)| task::spawn(async { (id.clone(), Scores::from_id_with_token(id, token).await) }))
+                .map(|(id, token)| smol::spawn(async { (id.clone(), Scores::from_id_with_token(id, token).await) }))
                 .collect::<Vec<_>>()
         };
 
         futures::future::join_all(task_iter).await
-            .into_iter()
-            .map(|res| res.map_err(|e| e.into()))
-            .collect::<Result<Vec<_>>>()
     }
 
     fn info_pair(&self, id: &str, sort_positive: bool) -> (f64, TermString) {
