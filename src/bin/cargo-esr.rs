@@ -192,5 +192,6 @@ async fn run() {
 }
 
 fn main() {
+    env::set_var("SMOL_THREADS", "32");
     smol::block_on(run());
 }
